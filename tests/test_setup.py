@@ -184,18 +184,6 @@ def test_relationship_to_with_options():
     del REVERSE_RELATIONS["Other"]
 
 
-def test_reverse_relations():
-    """Using testing_app.models, check that REVERSE_RELATIONS are created automatically"""
-    from pros_core.models import REVERSE_RELATIONS
-
-    assert REVERSE_RELATIONS["Book"]
-    assert REVERSE_RELATIONS["Book"]["belongs_to_person"] == {
-        "relation_to": "Person",
-        "cardinality": "ZeroOrMore",
-        "relationship_forward_name": "HAS_BOOKS",
-    }
-
-
 def test_model_manager_automatically_gets_models():
     from pros_core.setup_utils import ModelManager
 
@@ -460,31 +448,46 @@ def test_hashed_app_model_set_and_items():
 
 
 def test_build_reverse_relations():
-    from pros_core.setup_utils.model_manager import build_reverse_relationships
+    from pros_core.setup_utils.model_manager import (
+        ReverseRelationshipType,
+        build_reverse_relationships,
+    )
     from test_app.models import Person, Pet
 
-    assert build_reverse_relationships(Pet) == {
-        "owned_by_person": {
-            "relation_to": "Person",
-            "cardinality": "ZeroOrMore",
-            "relationship_forward_name": "OWNS_PETS",
-        },
-        "is_involved_in_happening": {
-            "cardinality": "ZeroOrMore",
-            "relation_to": "Happening",
-            "relationship_forward_name": "INVOLVES_ENTITY",
-        },
+    assert build_reverse_relationships(Person) == {
+        "is_identified_by": ReverseRelationshipType(
+            target_model_name="PersonIdentification",
+            reverse_relationship_label="is_identified_by",
+            forward_relationship_label="PERSONS_IDENTIFIED",
+            relation_manager=ZeroOrMore,
+            has_relation_data=False,
+            relation_properties=[],
+        ),
+        "is_involved_in_happening": ReverseRelationshipType(
+            target_model_name="Happening",
+            reverse_relationship_label="is_involved_in_happening",
+            forward_relationship_label="INVOLVES_ENTITY",
+            relation_manager=ZeroOrMore,
+            has_relation_data=False,
+            relation_properties=[],
+        ),
     }
 
-    assert build_reverse_relationships(Person) == {
-        "is_identified_by": {
-            "cardinality": "ZeroOrMore",
-            "relation_to": "PersonIdentification",
-            "relationship_forward_name": "PERSONS_IDENTIFIED",
-        },
-        "is_involved_in_happening": {
-            "cardinality": "ZeroOrMore",
-            "relation_to": "Happening",
-            "relationship_forward_name": "INVOLVES_ENTITY",
-        },
+    assert build_reverse_relationships(Pet) == {
+        "owned_by_person": ReverseRelationshipType(
+            target_model_name="Person",
+            reverse_relationship_label="owned_by_person",
+            forward_relationship_label="OWNS_PETS",
+            relation_manager=ZeroOrMore,
+            has_relation_data=True,
+            relation_properties=["purchased_when"],
+        ),
+        "is_involved_in_happening": ReverseRelationshipType(
+            target_model_name="Happening",
+            reverse_relationship_label="is_involved_in_happening",
+            forward_relationship_label="INVOLVES_ENTITY",
+            relation_manager=ZeroOrMore,
+            has_relation_data=False,
+            relation_properties=[],
+        ),
     }

@@ -294,7 +294,17 @@ def build_relationships(model: type[AbstractNode]) -> dict[str, RelationshipType
     return relations
 
 
-def build_reverse_relationships(model):
+@dataclass
+class ReverseRelationshipType:
+    target_model_name: str
+    reverse_relationship_label: str
+    forward_relationship_label: str
+    relation_manager: type[RelationshipManager]
+    has_relation_data: bool = False
+    relation_properties: list[str] = list
+
+
+def build_reverse_relationships(model) -> dict[str, ReverseRelationshipType]:
     """Reverse relations are defined in REVERSE RELATIONS but we need
     to also get the parent reverse relations"""
 
@@ -307,7 +317,34 @@ def build_reverse_relationships(model):
             **REVERSE_RELATIONS[parent_model.__name__],
         }
 
-    return {**REVERSE_RELATIONS[model.__name__], **parent_reverse_relations}
+    reverse_relations = {
+        **REVERSE_RELATIONS[model.__name__],
+        **parent_reverse_relations,
+    }
+
+    packed_reverse_relations = {}
+    for rel_name, relation in reverse_relations.items():
+        relation_properties = [
+            property_name
+            for property_name, property in relation["relation"]
+            .definition["model"]
+            .__dict__.items()
+            if isinstance(property, Property)
+            and property_name not in {"reverse_name", "to_inline_createable"}
+        ]
+
+        rel = ReverseRelationshipType(
+            target_model_name=relation["relation_to"],
+            reverse_relationship_label=rel_name,
+            forward_relationship_label=relation["relationship_forward_name"],
+            relation_manager=relation["relationship_manager"],
+            has_relation_data=relation["relation"].definition["model"].__name__
+            != "Relation",
+            relation_properties=relation_properties,
+        )
+
+        packed_reverse_relations[rel_name] = rel
+    return packed_reverse_relations
 
 
 def build_properties(model: Type[AbstractNode]) -> DottedDict[str, Property]:

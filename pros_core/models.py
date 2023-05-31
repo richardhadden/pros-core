@@ -44,10 +44,11 @@ class BaseNode(StructuredNode):
                     rr = REVERSE_RELATIONS[v._raw_class][
                         v.definition["model"].__dict__["reverse_name"].default.lower()
                     ]
-
+                    rr["relation"] = v
                     rr["relation_to"] = cls.__name__
                     rr["relationship_forward_name"] = v.definition["relation_type"]
-                    rr["cardinality"] = v.manager.__name__
+                    rr["relationship_manager"] = v.manager
+
                 except:
                     pass
 
