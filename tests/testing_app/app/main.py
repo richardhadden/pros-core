@@ -1,14 +1,12 @@
 import inspect
 
-from fastapi import FastAPI, APIRouter
+from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pros_core.setup_app import setup_app
 
 from .core.config import settings
 
-from pros_core.setup_app import setup_app
-
-
-map(__import__, settings.INSTALLED_APPS)
+# map(__import__, settings.INSTALLED_APPS)
 
 
 def get_application():
