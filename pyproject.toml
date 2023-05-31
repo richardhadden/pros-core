@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "pros-core"
+version = "0.1.0"
+description = ""
+authors = ["Richard Hadden <richard.hadden@oeaw.ac.at>"]
+readme = "README.md"
+packages = [{include = "pros_core"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pytest = "^7.3.1"
+pytest-xdist = "^3.3.1"
+neomodel = {path = "../neomodel"}
+camel-converter = "^3.0.0"
+ordered-set = "^4.1.0"
+dotted-dict = "^1.1.3"
+
+
+[tool.poetry.group.dev.dependencies]
+httpx = "^0.24.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "../pros-core/",
+  "./tests/",
+  "./tests/testing_app/"
+]
