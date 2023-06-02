@@ -1,7 +1,8 @@
-from neomodel import DateProperty, One, StringProperty
+from neomodel import BooleanProperty, DateProperty, One, StringProperty, OneOrMore
 from pros_core.models import (
     AbstractNode,
     AbstractReification,
+    AbstractTrait,
     ChildNode,
     RelationshipBase,
     RelationshipTo,
@@ -12,8 +13,9 @@ class NoPropertiesNode(AbstractNode):
     pass
 
 
-class Book(AbstractNode):
-    label = StringProperty()
+class Ownable(AbstractTrait):
+    owner = RelationshipTo("Person", "is_owner_of")
+    ownership_type = StringProperty()
 
 
 class Happening(AbstractNode):
@@ -27,10 +29,11 @@ class Entity(AbstractNode):
 
 
 class Animal(Entity):
-    pass
+    class Meta:
+        something_inheritable = True
 
 
-class Pet(Animal):
+class Pet(Animal, Ownable):
     name = StringProperty()
 
 
@@ -38,7 +41,17 @@ class Calendar(AbstractNode):
     type = StringProperty(default="Julian")
 
 
-class Date(ChildNode):
+class DateBase(ChildNode):
+    class Meta:
+        abstract = True
+
+
+class DateImprecise(DateBase):
+    date = StringProperty()
+    calendar_format = RelationshipTo("Calendar", "is_in_calendar_format")
+
+
+class DatePrecise(DateBase):
     date = StringProperty()
     calendar_format = RelationshipTo("Calendar", "is_in_calendar_format")
 
@@ -49,11 +62,15 @@ class PetOwnershipRelation(RelationshipBase):
 
 class Person(Animal):
     name = StringProperty()
+    is_male = BooleanProperty(default=True)
     has_books = RelationshipTo("Book", "belongs_to_person")
-    date_of_birth = Date.as_child_node()
+    date_of_birth = DateBase.as_child_node()
     owns_pets = Pet.as_inline_createable(
         "owned_by_person", relationship_model=PetOwnershipRelation
     )
+
+    class Meta:
+        display_name_plural = "People"
 
 
 class PersonIdentification(AbstractReification):
@@ -63,3 +80,16 @@ class PersonIdentification(AbstractReification):
 
 class Factoid(AbstractNode):
     concerns_person = PersonIdentification.as_abstract_reification("is_concerned_in")
+
+
+class Book(AbstractNode, Ownable):
+    label = StringProperty()
+    author = RelationshipTo("Person", "is_author_of", cardinality=OneOrMore)
+
+
+class NonOwnableBook(Book):
+    pass
+
+
+class DefinitelyNonOwnableBook(NonOwnableBook):
+    pass

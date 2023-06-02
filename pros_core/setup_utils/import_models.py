@@ -15,7 +15,13 @@ def import_models(settings: BaseSettings) -> list[tuple[str, str, type[BaseNode]
             lambda x: inspect.isclass(x)
             and issubclass(x, BaseNode)
             and x.__name__
-            not in {"BaseNode", "AbstractNode", "AbstractReification", "ChildNode"},
+            not in {
+                "BaseNode",
+                "AbstractNode",
+                "AbstractReification",
+                "ChildNode",
+                "AbstractTrait",
+            },
         )
         models = [(pros_app, model[0], model[1]) for model in models]
         all_models += models

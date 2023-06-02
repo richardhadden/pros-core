@@ -1,15 +1,24 @@
 from __future__ import annotations
 
+import datetime
 import inspect
 from dataclasses import dataclass
-from typing import Dict, Self, Type
+from typing import Any, Dict, Literal, Optional, Self, Type
 
 from camel_converter import to_pascal
 from dotted_dict import DottedDict
 from neomodel import (
+    ArrayProperty,
+    BooleanProperty,
+    DateProperty,
+    DateTimeProperty,
+    FloatProperty,
+    IntegerProperty,
+    JSONProperty,
     Property,
     RelationshipDefinition,
     RelationshipManager,
+    StringProperty,
     UniqueIdProperty,
 )
 from ordered_set import OrderedSet
@@ -22,6 +31,7 @@ from pros_core.models import (
     ChildNode,
     ChildNodeRelation,
 )
+from pydantic import UUID4, BaseModel, create_model
 
 
 @dataclass
@@ -375,6 +385,112 @@ def build_child_nodes(model: Type[AbstractNode]) -> Dict[str, ChildNodeRelationT
         and issubclass(p.definition["model"], ChildNodeRelation)
     }
     return child_nodes
+
+
+from enum import Enum
+
+
+def build_pydantic_properties(
+    neomodel_class: type[BaseNode],
+) -> dict[str, tuple[type, Any]]:
+    neomodel_properties = build_properties(neomodel_class)
+    pydantic_properties = {}
+    for neomodel_property_name, neomodel_property in neomodel_properties.items():
+        if neomodel_property_name == "real_type":
+            continue
+
+        if isinstance(neomodel_property, StringProperty):
+            prop = str
+
+        elif isinstance(neomodel_property, BooleanProperty):
+            prop = bool
+
+        elif isinstance(neomodel_property, DateProperty):
+            prop = datetime.date
+
+        elif isinstance(neomodel_property, DateTimeProperty):
+            prop = datetime.datetime
+
+        elif isinstance(neomodel_property, FloatProperty):
+            prop = float
+
+        elif isinstance(neomodel_property, IntegerProperty):
+            prop = int
+
+        elif isinstance(neomodel_property, UniqueIdProperty):
+            prop = UUID4
+
+        if neomodel_property.required != True:
+            prop = Optional[prop]
+
+        if not callable(neomodel_property.default):
+            default = neomodel_property.default
+        else:
+            default = ...
+
+        pydantic_properties[neomodel_property_name] = (prop, default)
+
+    return pydantic_properties
+
+
+def build_relation_return_model(neomodel_class: type[BaseNode]):
+    Model = create_model(
+        f"{neomodel_class.__name__}RelationModel",
+        real_type=(Any, neomodel_class.__name__.lower()),
+        label=(str, ...),
+        uid=(UUID4, ...),
+        relation_data=(dict, ...),
+    )
+    return Model
+
+
+def build_pydantic_return_relations(
+    neomodel_class: type[BaseNode],
+) -> dict[tuple[list[BaseModel], Any]]:
+    neomodel_relations = build_relationships(neomodel_class)
+    pydantic_properties = {}
+
+    for relationship_name, relationship in neomodel_relations.items():
+        related_pydantic_model = build_relation_return_model(relationship.target_model)
+
+        pydantic_properties[relationship_name] = (list[related_pydantic_model], ...)
+
+    return pydantic_properties
+
+
+def build_pydantic_return_child_nodes(
+    neomodel_class: type[BaseNode],
+) -> dict[tuple[list[BaseModel], Any]]:
+    neomodel_relations = build_child_nodes(neomodel_class)
+    pydantic_properties = {}
+
+    for relationship_name, relationship in neomodel_relations.items():
+        # TODO: get subtypes with discriminator...
+        related_pydantic_model = build_relation_return_model(relationship.child_model)
+
+        pydantic_properties[relationship_name] = (list[related_pydantic_model], ...)
+
+    return pydantic_properties
+
+
+def build_pydantic_return_model(neomodel_class: type[BaseNode]) -> type[BaseModel]:
+    RealTypeLiteral = Enum(  # type: ignore[misc]
+        "RealType",
+        ((neomodel_class.__name__.lower(), neomodel_class.__name__.lower()),),
+        type=str,
+    )
+    pydantic_properties = build_pydantic_properties(neomodel_class)
+    pydantic_relations = build_pydantic_return_relations(neomodel_class)
+    pydantic_child_nodes = build_pydantic_return_child_nodes(neomodel_class)
+    Model = create_model(
+        f"{neomodel_class.__name__}",
+        real_type=(RealTypeLiteral, neomodel_class.__name__.lower()),
+        **pydantic_properties,
+        **pydantic_relations,
+        **pydantic_child_nodes,
+    )
+    print(Model.schema())
+    return Model
 
 
 ModelManager = ModelManagerClass()

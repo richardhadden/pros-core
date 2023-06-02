@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import inspect
 from collections import defaultdict
 from typing import TYPE_CHECKING, DefaultDict, Optional, Type
 
@@ -30,13 +31,104 @@ REVERSE_RELATIONS: DefaultDict[str, DefaultDict[str, dict]] = defaultdict(
 )
 
 
-class BaseNode(StructuredNode):
-    """Base for all Neomodel nodes"""
-
+class BaseStructuredNode(StructuredNode):
     __abstract_node__ = True
+
+    @staticmethod
+    def is_abstract_trait(cls) -> bool:
+        return getattr(cls, "__is_trait__", False)
+
+    """ TODO: Seemingly not necessary; remove later
+    @classmethod
+    def has_trait_as_direct_base(cls):
+        trait_is_direct_base = False
+
+        for base in cls.__bases__:
+            base_is_trait = False
+            for parent in inspect.getmro(base):
+                if parent.__name__ == "AbstractNode":
+                    break
+                elif parent.__name__ == "AbstractTrait":
+                    base_is_trait = True
+                else:
+                    continue
+            trait_is_direct_base = base_is_trait
+        return trait_is_direct_base
+    """
+
+    @classmethod
+    def traits_as_direct_base(cls) -> set[AbstractTrait]:
+        traits_as_direct_bases = []
+        if getattr(cls, "__is_trait__", False):
+            traits_as_direct_bases.append(cls)
+        for base in cls.__bases__:
+            for parent in inspect.getmro(base):
+                if parent.__name__ == "AbstractNode":
+                    break
+                elif parent.__name__ == "AbstractTrait":
+                    traits_as_direct_bases.append(base)
+                else:
+                    continue
+        return set(traits_as_direct_bases)
+
+    @classmethod
+    def inherited_labels(cls) -> list[str]:
+        """
+        Return list of labels from nodes class hierarchy.
+
+        :return: list
+        """
+        # Overrides the neomodel StructuredNode method to exclude labels from
+        # inherited traits
+
+        inherited = []
+        for scls in cls.__mro__:
+            if hasattr(scls, "__label__"):
+                if cls.is_abstract_trait(scls) and scls not in cls.__bases__:
+                    continue
+
+                inherited.append(scls.__label__)
+
+        return inherited
+
+    @classmethod
+    def defined_properties(cls, aliases=True, properties=True, rels=True):
+        # Overrides the neomodel StructureNode method to get only properties/relationships
+        # that come from current class, parent BaseNodes and direct traits
+
+        from neomodel import AliasProperty, Property
+        from neomodel.relationship_manager import RelationshipDefinition
+
+        props = {}
+        for baseclass in reversed(cls.__mro__):
+            if (
+                cls.is_abstract_trait(baseclass)
+                and baseclass not in cls.traits_as_direct_base()
+            ):
+                continue
+            props.update(
+                dict(
+                    (name, property)
+                    for name, property in vars(baseclass).items()
+                    if (aliases and isinstance(property, AliasProperty))
+                    or (
+                        properties
+                        and isinstance(property, Property)
+                        and not isinstance(property, AliasProperty)
+                    )
+                    or (rels and isinstance(property, RelationshipDefinition))
+                )
+            )
+
+        return props
 
     def __init_subclass__(cls) -> None:
         # Add to REVERSE_RELATIONS dict the info from the side of the possessing class
+
+        super().__init_subclass__()
+
+        # Introspect the class for relations, and add the relation information
+        # to the REVERSE_RELATIONS dict
         for k, v in cls.__dict__.items():
             if isinstance(v, RelationshipDefinition):
                 try:
@@ -51,6 +143,58 @@ class BaseNode(StructuredNode):
 
                 except:
                     pass
+
+
+class BaseNode(BaseStructuredNode):
+    """Base for all Neomodel nodes"""
+
+    __abstract_node__ = True
+
+    # Fields appearing in BaseNode.Meta that should not be inherited by subclasses
+    NON_INHERITABLE_META_FIELDS = ["display_name", "display_name_plural", "abstract"]
+
+    class Meta:
+        pass
+
+    def __init_subclass__(cls) -> None:
+        super().__init_subclass__()
+        cls.__is_trait__ = False
+
+        # Build the class Meta class and the cls._meta dict
+        base_attrs = {}
+
+        # Get all the attributes of the base classes
+        for base in list(cls.__bases__):
+            base_attrs = {**getattr(base, "Meta").__dict__}
+
+        # Remove attributes that should not be inherited
+        for remove_field in cls.NON_INHERITABLE_META_FIELDS:
+            base_attrs.pop(remove_field, None)
+
+        # Create meta attributes using base attributes and attributes of the current class
+        meta_attrs = {**base_attrs, **cls.__dict__.get("Meta", __class__.Meta).__dict__}
+
+        # Create a new Meta class and assign it to the class
+        cls.Meta = type(
+            "Meta",
+            (__class__.Meta,),
+            meta_attrs,
+        )
+
+        # For convenience, make this into a dict on the class
+        cls._meta = {
+            k: v
+            for k, v in cls.Meta.__dict__.items()
+            if not k.startswith("__") and not k.endswith("__")
+        }
+
+
+class AbstractTrait(BaseStructuredNode):
+    __abstract_node__ = True
+    __is_trait__ = True
+
+    class Meta:
+        pass
 
 
 class InlineCreateableRelation(StructuredRel):
@@ -73,7 +217,7 @@ class ChildNode(BaseNode):
     __abstract_node__ = True
 
     @classmethod
-    def as_child_node(cls, cardinality=One):
+    def as_child_node(cls, cardinality=One) -> RelationshipDefinition:
         return neomodelRelationshipTo(
             cls.__name__,
             f"NOT SET",

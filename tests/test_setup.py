@@ -246,10 +246,11 @@ def test_app_model_reinjected_into_model():
 
 def test_parent_has_child_node():
     from pros_core import ModelManager
-    from test_app.models import Date, Person
+    from test_app.models import DateBase, Person
 
     assert (
-        ModelManager.get_model(Person).child_nodes["date_of_birth"].child_model == Date
+        ModelManager.get_model(Person).child_nodes["date_of_birth"].child_model
+        == DateBase
     )
 
 
@@ -455,6 +456,14 @@ def test_build_reverse_relations():
     from test_app.models import Person, Pet
 
     assert build_reverse_relationships(Person) == {
+        "is_owner_of": ReverseRelationshipType(
+            target_model_name="Ownable",
+            reverse_relationship_label="is_owner_of",
+            forward_relationship_label="OWNER",
+            relation_manager=ZeroOrMore,
+            has_relation_data=False,
+            relation_properties=[],
+        ),
         "is_identified_by": ReverseRelationshipType(
             target_model_name="PersonIdentification",
             reverse_relationship_label="is_identified_by",
@@ -468,6 +477,14 @@ def test_build_reverse_relations():
             reverse_relationship_label="is_involved_in_happening",
             forward_relationship_label="INVOLVES_ENTITY",
             relation_manager=ZeroOrMore,
+            has_relation_data=False,
+            relation_properties=[],
+        ),
+        "is_author_of": ReverseRelationshipType(
+            target_model_name="Book",
+            reverse_relationship_label="is_author_of",
+            forward_relationship_label="AUTHOR",
+            relation_manager=OneOrMore,
             has_relation_data=False,
             relation_properties=[],
         ),
@@ -491,3 +508,133 @@ def test_build_reverse_relations():
             relation_properties=[],
         ),
     }
+
+
+def test_trait_inheritance():
+    from test_app.models import Book, NonOwnableBook, Person, DefinitelyNonOwnableBook
+
+    # assert dict(Book.__all_properties__) == {}
+    assert "uid" in dict(Book.__all_properties__)
+    assert "ownership_type" in dict(Book.__all_properties__)
+    assert "owner" in dict(Book.__all_relationships__)
+    assert "author" in dict(Book.__all_relationships__)
+
+    assert "author" in dict(NonOwnableBook.__all_relationships__)
+    assert "uid" in dict(NonOwnableBook.__all_properties__)
+    assert "ownership_type" not in dict(NonOwnableBook.__all_properties__)
+    assert "owner" not in dict(NonOwnableBook.__all_relationships__)
+
+    assert "author" in dict(DefinitelyNonOwnableBook.__all_relationships__)
+    assert "uid" in dict(DefinitelyNonOwnableBook.__all_properties__)
+    assert "ownership_type" not in dict(DefinitelyNonOwnableBook.__all_properties__)
+    assert "owner" not in dict(DefinitelyNonOwnableBook.__all_relationships__)
+
+    assert Person.inherited_labels() == ["Person", "Animal", "Entity"]
+    assert Book.inherited_labels() == ["Book", "Ownable"]
+    assert NonOwnableBook.inherited_labels() == ["NonOwnableBook", "Book"]
+    assert DefinitelyNonOwnableBook.inherited_labels() == [
+        "DefinitelyNonOwnableBook",
+        "NonOwnableBook",
+        "Book",
+    ]
+
+
+"""
+def test_build_pydantic_model():
+    from pros_core.setup_utils.model_manager import build_pydantic_return_model
+    from test_app.models import Person
+
+    assert build_pydantic_return_model(Person).schema() == {
+        "title": "PersonModel",
+        "type": "object",
+        "properties": {
+            "real_type": {
+                "default": "person",
+                "allOf": [{"$ref": "#/definitions/RealType"}],
+            },
+            "label": {"title": "Label", "type": "string"},
+            "created_by": {"title": "Created By", "type": "string"},
+            "created_when": {
+                "title": "Created When",
+                "type": "string",
+                "format": "date-time",
+            },
+            "modified_by": {"title": "Modified By", "type": "string"},
+            "modified_when": {
+                "title": "Modified When",
+                "type": "string",
+                "format": "date-time",
+            },
+            "is_deleted": {"title": "Is Deleted", "default": False, "type": "boolean"},
+            "last_dependent_change": {
+                "title": "Last Dependent Change",
+                "type": "string",
+                "format": "date-time",
+            },
+            "name": {"title": "Name", "type": "string"},
+            "is_male": {"title": "Is Male", "default": True, "type": "boolean"},
+            "has_books": {
+                "title": "Has Books",
+                "type": "array",
+                "items": {"$ref": "#/definitions/BookRelationModel"},
+            },
+            "owns_pets": {
+                "title": "Owns Pets",
+                "type": "array",
+                "items": {"$ref": "#/definitions/PetRelationModel"},
+            },
+            "date_of_birth": {
+                "title": "Date Of Birth",
+                "type": "array",
+                "items": {"$ref": "#/definitions/DateRelationModel"},
+            },
+        },
+        "required": [
+            "last_dependent_change",
+            "has_books",
+            "owns_pets",
+            "date_of_birth",
+        ],
+        "definitions": {
+            "RealType": {
+                "title": "RealType",
+                "description": "An enumeration.",
+                "enum": ["person"],
+                "type": "string",
+            },
+            "BookRelationModel": {
+                "title": "BookRelationModel",
+                "type": "object",
+                "properties": {
+                    "real_type": {"title": "Real Type", "default": "book"},
+                    "label": {"title": "Label", "type": "string"},
+                    "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+                    "relation_data": {"title": "Relation Data", "type": "object"},
+                },
+                "required": ["label", "uid", "relation_data"],
+            },
+            "PetRelationModel": {
+                "title": "PetRelationModel",
+                "type": "object",
+                "properties": {
+                    "real_type": {"title": "Real Type", "default": "pet"},
+                    "label": {"title": "Label", "type": "string"},
+                    "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+                    "relation_data": {"title": "Relation Data", "type": "object"},
+                },
+                "required": ["label", "uid", "relation_data"],
+            },
+            "DateRelationModel": {
+                "title": "DateRelationModel",
+                "type": "object",
+                "properties": {
+                    "real_type": {"title": "Real Type", "default": "date"},
+                    "label": {"title": "Label", "type": "string"},
+                    "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+                    "relation_data": {"title": "Relation Data", "type": "object"},
+                },
+                "required": ["label", "uid", "relation_data"],
+            },
+        },
+    }
+"""
