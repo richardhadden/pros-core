@@ -188,6 +188,8 @@ class BaseNode(BaseStructuredNode):
             if not k.startswith("__") and not k.endswith("__")
         }
 
+        # If a trait appears as a direct base, register this class
+        # with the trait's list of classes to which it is applied
         for trait in cls.traits_as_direct_base():
             trait.__classes_with_trait__.add(cls)
 
@@ -246,7 +248,9 @@ class AbstractReification(BaseNode):
     __abstract_node__ = True
 
     @classmethod
-    def as_abstract_reification(cls, reverse_name="", cardinality=ZeroOrMore):
+    def as_abstract_reification(
+        cls, reverse_name="", cardinality=ZeroOrMore
+    ) -> RelationshipDefinition:
         return neomodelRelationshipTo(
             cls.__name__,
             f"{cls.__name__}_{reverse_name}",
