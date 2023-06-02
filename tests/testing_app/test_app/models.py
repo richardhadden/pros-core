@@ -50,12 +50,12 @@ class DateBase(ChildNode):
 
 class DateImprecise(DateBase):
     date = StringProperty()
-    calendar_format = RelationshipTo("Calendar", "is_in_calendar_format")
+    # calendar_format = RelationshipTo("Calendar", "is_in_calendar_format")
 
 
 class DatePrecise(DateBase):
     date = StringProperty()
-    calendar_format = RelationshipTo("Calendar", "is_in_calendar_format")
+    # calendar_format = RelationshipTo("Calendar", "is_in_calendar_format")
 
 
 class PetOwnershipRelation(RelationshipBase):

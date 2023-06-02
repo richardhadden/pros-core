@@ -1,6 +1,6 @@
 import datetime
 from enum import Enum
-from typing import Any, Optional, TypeVar, Union
+from typing import Any, Literal, Optional, TypeVar, Union
 
 import pydantic
 from neomodel import (
@@ -98,7 +98,6 @@ def build_pydantic_return_child_nodes(
     pydantic_properties = {}
 
     for relationship_name, relation_app_model in neomodel_child_nodes.items():
-        # TODO: get subtypes with discriminator...
         types = []
         if not getattr(relation_app_model.child_model, "__abstract__", False):
             base_model = build_relation_return_model(relation_app_model.child_model)
@@ -122,7 +121,30 @@ def build_pydantic_return_child_nodes(
             )
 
         for subclass_app_model in build_subclasses_set(relation_app_model.child_model):
-            types.append(build_relation_return_model(subclass_app_model.model))
+            # TODO: THIS doesn't work... needs to include *all* fields...
+            class RealTypeLiteral(Enum):
+                val = neomodel_class.__name__.lower()
+
+            pydantic_properties = build_pydantic_properties(subclass_app_model.model)
+            pydantic_relations = build_pydantic_return_relations(
+                subclass_app_model.model
+            )
+            pydantic_child_nodes = build_pydantic_return_child_nodes(
+                subclass_app_model.model
+            )
+            Model = create_model(
+                f"{subclass_app_model.model.__name__}",
+                real_type=(
+                    Literal[subclass_app_model.model.__name__.lower()],  # type: ignore
+                    subclass_app_model.model.__name__.lower(),
+                ),
+                **pydantic_properties,
+                **pydantic_relations,
+                **pydantic_child_nodes,
+            )
+            # print(Model.schema())
+
+            types.append(Model)
 
         t_tuple = tuple(types)
         pydantic_properties[relationship_name] = (
@@ -135,21 +157,21 @@ def build_pydantic_return_child_nodes(
 
 
 def build_pydantic_return_model(neomodel_class: type[BaseNode]) -> type[BaseModel]:
-    RealTypeLiteral = Enum(  # type: ignore[misc]
-        "RealType",
-        (("val", neomodel_class.__name__.lower()),),
-        type=str,
-    )
+    class RealTypeLiteral(Enum):
+        val: str = neomodel_class.__name__.lower()
+
     pydantic_properties = build_pydantic_properties(neomodel_class)
     pydantic_relations = build_pydantic_return_relations(neomodel_class)
     pydantic_child_nodes = build_pydantic_return_child_nodes(neomodel_class)
     Model = create_model(
         f"{neomodel_class.__name__}",
-        real_type=(RealTypeLiteral, RealTypeLiteral.val.lower()),
+        real_type=(
+            Literal[neomodel_class.__name__.lower()],  # type: ignore
+            neomodel_class.__name__.lower(),
+        ),
         **pydantic_properties,
         **pydantic_relations,
         **pydantic_child_nodes,
     )
     print(Model.schema())
-
     return Model

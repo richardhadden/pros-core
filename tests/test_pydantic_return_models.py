@@ -30,8 +30,10 @@ def test_build_pydantic_model_for_person():
         "type": "object",
         "properties": {
             "real_type": {
+                "title": "Real Type",
                 "default": "person",
-                "allOf": [{"$ref": "#/definitions/RealType"}],
+                "enum": ["person"],
+                "type": "string",
             },
             "label": {"title": "Label", "type": "string"},
             "created_by": {"title": "Created By", "type": "string"},
@@ -64,6 +66,7 @@ def test_build_pydantic_model_for_person():
                 "type": "array",
                 "items": {"$ref": "#/definitions/Pet"},
             },
+            "date": {"title": "Date", "type": "string"},
             "date_of_birth": {
                 "title": "Date Of Birth",
                 "type": "array",
@@ -82,12 +85,6 @@ def test_build_pydantic_model_for_person():
             "date_of_birth",
         ],
         "definitions": {
-            "RealType": {
-                "title": "RealType",
-                "description": "An enumeration.",
-                "enum": ["person"],
-                "type": "string",
-            },
             "Book": {
                 "title": "Book",
                 "type": "object",
@@ -114,23 +111,27 @@ def test_build_pydantic_model_for_person():
                 "title": "DateImprecise",
                 "type": "object",
                 "properties": {
-                    "real_type": {"title": "Real Type", "default": "dateimprecise"},
-                    "label": {"title": "Label", "type": "string"},
-                    "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                    "relation_data": {"title": "Relation Data", "type": "object"},
+                    "real_type": {
+                        "title": "Real Type",
+                        "default": "dateimprecise",
+                        "enum": ["dateimprecise"],
+                        "type": "string",
+                    },
+                    "date": {"title": "Date", "type": "string"},
                 },
-                "required": ["label", "uid", "relation_data"],
             },
             "DatePrecise": {
                 "title": "DatePrecise",
                 "type": "object",
                 "properties": {
-                    "real_type": {"title": "Real Type", "default": "dateprecise"},
-                    "label": {"title": "Label", "type": "string"},
-                    "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                    "relation_data": {"title": "Relation Data", "type": "object"},
+                    "real_type": {
+                        "title": "Real Type",
+                        "default": "dateprecise",
+                        "enum": ["dateprecise"],
+                        "type": "string",
+                    },
+                    "date": {"title": "Date", "type": "string"},
                 },
-                "required": ["label", "uid", "relation_data"],
             },
         },
     }
