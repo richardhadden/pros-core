@@ -55,6 +55,7 @@ def test_ModelManager_adding_app_models():
         subclasses={},
         parent_classes={},
         reverse_relationships={},
+        meta={},
         _mm=MM,
     )
     MM.add_model(app_model)
@@ -82,6 +83,7 @@ def test_ModelManager_lookup_fuctions():
         subclasses={},
         parent_classes={},
         reverse_relationships={},
+        meta={},
         _mm=MM,
     )
     MM.add_model(app_model)
@@ -292,7 +294,7 @@ def test_abstract_reification_added_to_app_model():
 
 
 def test_build_subclasses_hierarchy():
-    from pros_core.setup_utils.model_manager import (
+    from pros_core.setup_utils.build_app_model_definitions import (
         HashedAppModelSet,
         SubclassHierarchyItem,
         build_subclasses_hierarchy,
@@ -319,7 +321,7 @@ def test_build_subclasses_hierarchy():
 
 
 def test_app_model_subclass_hierarchy():
-    from pros_core.setup_utils.model_manager import (
+    from pros_core.setup_utils.build_app_model_definitions import (
         HashedAppModelSet,
         ModelManager,
         SubclassHierarchyItem,
@@ -347,7 +349,7 @@ def test_app_model_subclass_hierarchy():
 
 
 def test_build_subclass_list():
-    from pros_core.setup_utils.model_manager import (
+    from pros_core.setup_utils.build_app_model_definitions import (
         HashableAppModelItem,
         HashedAppModelSet,
         ModelManager,
@@ -365,7 +367,7 @@ def test_build_subclass_list():
 
 
 def test_app_model_subclass_list():
-    from pros_core.setup_utils.model_manager import (
+    from pros_core.setup_utils.build_app_model_definitions import (
         HashableAppModelItem,
         HashedAppModelSet,
         ModelManager,
@@ -386,7 +388,7 @@ def test_app_model_subclass_list():
 
 
 def test_build_parent_class_list():
-    from pros_core.setup_utils.model_manager import (
+    from pros_core.setup_utils.build_app_model_definitions import (
         HashableAppModelItem,
         HashedAppModelSet,
         build_parent_classes_set,
@@ -406,7 +408,7 @@ def test_build_parent_class_list():
 
 
 def test_app_model_parent_class_list():
-    from pros_core.setup_utils.model_manager import (
+    from pros_core.setup_utils.build_app_model_definitions import (
         HashableAppModelItem,
         HashedAppModelSet,
         ModelManager,
@@ -426,7 +428,7 @@ def test_app_model_parent_class_list():
 
 
 def test_hashed_app_model_set_and_items():
-    from pros_core.setup_utils.model_manager import (
+    from pros_core.setup_utils.build_app_model_definitions import (
         HashableAppModelItem,
         HashedAppModelSet,
     )
@@ -449,7 +451,7 @@ def test_hashed_app_model_set_and_items():
 
 
 def test_build_reverse_relations():
-    from pros_core.setup_utils.model_manager import (
+    from pros_core.setup_utils.build_app_model_definitions import (
         ReverseRelationshipType,
         build_reverse_relationships,
     )
@@ -511,7 +513,7 @@ def test_build_reverse_relations():
 
 
 def test_trait_inheritance():
-    from test_app.models import Book, NonOwnableBook, Person, DefinitelyNonOwnableBook
+    from test_app.models import Book, DefinitelyNonOwnableBook, NonOwnableBook, Person
 
     # assert dict(Book.__all_properties__) == {}
     assert "uid" in dict(Book.__all_properties__)
@@ -540,107 +542,6 @@ def test_trait_inheritance():
 
 
 def test_abstract_trait_gets_real_classes():
-    from test_app.models import Ownable, Book, Pet
+    from test_app.models import Book, Ownable, Pet
 
     assert Ownable.__classes_with_trait__ == {Book, Pet}
-
-
-"""
-def test_build_pydantic_model():
-    from pros_core.setup_utils.model_manager import build_pydantic_return_model
-    from test_app.models import Person
-
-    assert build_pydantic_return_model(Person).schema() == {
-        "title": "PersonModel",
-        "type": "object",
-        "properties": {
-            "real_type": {
-                "default": "person",
-                "allOf": [{"$ref": "#/definitions/RealType"}],
-            },
-            "label": {"title": "Label", "type": "string"},
-            "created_by": {"title": "Created By", "type": "string"},
-            "created_when": {
-                "title": "Created When",
-                "type": "string",
-                "format": "date-time",
-            },
-            "modified_by": {"title": "Modified By", "type": "string"},
-            "modified_when": {
-                "title": "Modified When",
-                "type": "string",
-                "format": "date-time",
-            },
-            "is_deleted": {"title": "Is Deleted", "default": False, "type": "boolean"},
-            "last_dependent_change": {
-                "title": "Last Dependent Change",
-                "type": "string",
-                "format": "date-time",
-            },
-            "name": {"title": "Name", "type": "string"},
-            "is_male": {"title": "Is Male", "default": True, "type": "boolean"},
-            "has_books": {
-                "title": "Has Books",
-                "type": "array",
-                "items": {"$ref": "#/definitions/BookRelationModel"},
-            },
-            "owns_pets": {
-                "title": "Owns Pets",
-                "type": "array",
-                "items": {"$ref": "#/definitions/PetRelationModel"},
-            },
-            "date_of_birth": {
-                "title": "Date Of Birth",
-                "type": "array",
-                "items": {"$ref": "#/definitions/DateRelationModel"},
-            },
-        },
-        "required": [
-            "last_dependent_change",
-            "has_books",
-            "owns_pets",
-            "date_of_birth",
-        ],
-        "definitions": {
-            "RealType": {
-                "title": "RealType",
-                "description": "An enumeration.",
-                "enum": ["person"],
-                "type": "string",
-            },
-            "BookRelationModel": {
-                "title": "BookRelationModel",
-                "type": "object",
-                "properties": {
-                    "real_type": {"title": "Real Type", "default": "book"},
-                    "label": {"title": "Label", "type": "string"},
-                    "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                    "relation_data": {"title": "Relation Data", "type": "object"},
-                },
-                "required": ["label", "uid", "relation_data"],
-            },
-            "PetRelationModel": {
-                "title": "PetRelationModel",
-                "type": "object",
-                "properties": {
-                    "real_type": {"title": "Real Type", "default": "pet"},
-                    "label": {"title": "Label", "type": "string"},
-                    "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                    "relation_data": {"title": "Relation Data", "type": "object"},
-                },
-                "required": ["label", "uid", "relation_data"],
-            },
-            "DateRelationModel": {
-                "title": "DateRelationModel",
-                "type": "object",
-                "properties": {
-                    "real_type": {"title": "Real Type", "default": "date"},
-                    "label": {"title": "Label", "type": "string"},
-                    "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                    "relation_data": {"title": "Relation Data", "type": "object"},
-                },
-                "required": ["label", "uid", "relation_data"],
-            },
-        },
-    }
-"""

@@ -1,4 +1,4 @@
-from neomodel import BooleanProperty, DateProperty, One, StringProperty, OneOrMore
+from neomodel import BooleanProperty, DateProperty, One, OneOrMore, StringProperty
 from pros_core.models import (
     AbstractNode,
     AbstractReification,
@@ -42,6 +42,8 @@ class Calendar(AbstractNode):
 
 
 class DateBase(ChildNode):
+    __abstract__ = True
+
     class Meta:
         abstract = True
 
