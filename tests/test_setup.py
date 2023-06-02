@@ -539,6 +539,12 @@ def test_trait_inheritance():
     ]
 
 
+def test_abstract_trait_gets_real_classes():
+    from test_app.models import Ownable, Book, Pet
+
+    assert Ownable.__classes_with_trait__ == {Book, Pet}
+
+
 """
 def test_build_pydantic_model():
     from pros_core.setup_utils.model_manager import build_pydantic_return_model

@@ -188,6 +188,9 @@ class BaseNode(BaseStructuredNode):
             if not k.startswith("__") and not k.endswith("__")
         }
 
+        for trait in cls.traits_as_direct_base():
+            trait.__classes_with_trait__.add(cls)
+
 
 class AbstractTrait(BaseStructuredNode):
     __abstract_node__ = True
@@ -195,6 +198,10 @@ class AbstractTrait(BaseStructuredNode):
 
     class Meta:
         pass
+
+    def __init_subclass__(cls) -> None:
+        super().__init_subclass__()
+        cls.__classes_with_trait__ = set()
 
 
 class InlineCreateableRelation(StructuredRel):
