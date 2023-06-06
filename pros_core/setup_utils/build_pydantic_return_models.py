@@ -12,17 +12,25 @@ from neomodel import (
     DateTimeProperty,
     FloatProperty,
     IntegerProperty,
+    One,
+    OneOrMore,
+    RelationshipManager,
     StringProperty,
     UniqueIdProperty,
+    ZeroOrMore,
+    ZeroOrOne,
 )
 from pros_core.models import BaseNode
 from pros_core.setup_utils.build_app_model_definitions import (
     build_child_nodes,
     build_properties,
+    build_related_reifications,
     build_relationships,
     build_subclasses_set,
 )
-from pydantic import UUID4, BaseModel, Field, create_model
+from pydantic import UUID4, BaseModel, Field, conlist, create_model
+
+AnyItemType = TypeVar("AnyItemType")
 
 
 def build_pydantic_properties(
@@ -86,12 +94,27 @@ def build_relation_return_model(
     pydantic_model = create_model(
         class_name,
         __base__=base,
-        real_type=(Any, neomodel_class.__name__.lower()),
+        real_type=(Literal[neomodel_class.__name__.lower()], neomodel_class.__name__.lower()),  # type: ignore
         label=(str, ...),
         uid=(UUID4, ...),
         relation_data=(dict, ...),
     )
     return pydantic_model
+
+
+def build_list_constraints_from_relation_manager(
+    item_type: type[type],
+    relationship_manager: RelationshipManager,
+) -> type[list[AnyItemType]]:
+    constraints = {"unique_items": True}
+    if relationship_manager is One or relationship_manager is OneOrMore:
+        constraints["min_items"] = 1
+    if relationship_manager is One or relationship_manager is ZeroOrOne:
+        constraints["max_items"] = 1
+
+    cl = conlist(item_type, **constraints)
+
+    return cl
 
 
 def build_pydantic_return_relations(
@@ -105,23 +128,69 @@ def build_pydantic_return_relations(
     pydantic_relations = {}
 
     # Iterate relations
-    for relationship_name, relationship in neomodel_relations.items():
+    for relationship_name, relation_app_model in neomodel_relations.items():
         # If relation is to a trait (not a standard node), look up all the standard node classes
         # that have this trait and return a Union type of them
-        if relationship.target_model.__is_trait__:
+        if relation_app_model.target_model.__is_trait__:
             pydantic_models_with_trait = [
                 build_relation_return_model(cls)
-                for cls in relationship.target_model.__classes_with_trait__
+                for cls in relation_app_model.target_model.__classes_with_trait__
             ]
-            pydantic_relations[relationship_name] = (list[Union[*tuple(pydantic_models_with_trait)]], ...)  # type: ignore
+            pydantic_relations[relationship_name] = (
+                build_list_constraints_from_relation_manager(
+                    Union[*tuple(pydantic_models_with_trait)], relation_app_model.relation_manager  # type: ignore
+                ),
+                ...,
+            )  # type: ignore
 
         # Otherwise, build the relation for the related node type
         else:
-            pydantic_model = build_relation_return_model(relationship.target_model)
+            # If a relationship is to a class, it can be related to any subtype!
+            types = []
 
-            pydantic_relations[relationship_name] = (list[pydantic_model], ...)
+            # Get the return pydantic model for the base related model
+            pydantic_base_model = build_relation_return_model(
+                relation_app_model.target_model
+            )
+
+            # If base model is not abstract, add its pydantic model to the possible types
+            if not getattr(relation_app_model.target_model, "__abstract__", False):
+                types.append(pydantic_base_model)
+
+            # Get all the subclasses and create a
+            for subclass_app_model in build_subclasses_set(
+                relation_app_model.target_model
+            ):
+                subclass_pydantic_model = build_relation_return_model(
+                    subclass_app_model.model
+                )
+                types.append(subclass_pydantic_model)
+
+            t_tuple = tuple(types)
+            pydantic_relations[relationship_name] = (
+                build_list_constraints_from_relation_manager(
+                    Union[*t_tuple], relation_app_model.relation_manager  # type: ignore
+                ),
+                ...,
+            )
 
     return pydantic_relations
+
+
+def build_pydantic_return_related_reifications(
+    neomodel_class: type[BaseNode],
+) -> dict[tuple[list[BaseModel]], Any]:
+    neomodel_abstract_reifications = build_related_reifications(neomodel_class)
+
+    for (
+        reification_name,
+        reificiation_app_model,
+    ) in neomodel_abstract_reifications.items():
+        types = []
+        base_model = build_pydantic_model(reificiation_app_model.relation_model)
+
+        if not getattr(reificiation_app_model.relation_model, "__abstract__", False):
+            types.append(base_model)
 
 
 def build_pydantic_return_child_nodes(
@@ -144,7 +213,9 @@ def build_pydantic_return_child_nodes(
 
         t_tuple = tuple(types)
         pydantic_properties[relationship_name] = (
-            list[Union[*t_tuple]],  # type: ignore
+            build_list_constraints_from_relation_manager(
+                Union[*t_tuple], relation_app_model.relation_manager  # type: ignore
+            ),
             ...,
         )
 
@@ -175,7 +246,6 @@ def build_pydantic_model(neomodel_class: type[BaseNode]) -> BaseModel:
 
 def build_pydantic_return_model(neomodel_class: type[BaseNode]) -> type[BaseModel]:
     """Build pydantic model for return types from DB/API"""
-    ic("BUILDING MODEL FOR", neomodel_class)
 
     model = build_pydantic_model(neomodel_class)
 

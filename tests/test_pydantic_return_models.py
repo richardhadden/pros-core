@@ -3,6 +3,7 @@ from typing import Union, get_args, get_origin, get_type_hints
 import pydantic
 import pytest
 from pros_core.setup_app import setup_app
+from pydantic.types import ConstrainedList
 from testing_app.app.core.config import settings
 from testing_app.app.main import app
 
@@ -18,14 +19,10 @@ def test_build_pydantic_return_child_nodes():
     )
     from test_app.models import Person
 
-    types = build_pydantic_return_child_nodes(Person)
+    types: ConstrainedList = build_pydantic_return_child_nodes(Person)
     assert types["date_of_birth"]
 
-    assert tuple(t.__name__ for t in get_args(types["date_of_birth"][0])) == ("Union",)
-    assert (
-        str(types["date_of_birth"][0])
-        == "list[typing.Union[pydantic.main.DateImprecise, pydantic.main.DatePrecise]]"
-    )
+    assert types["date_of_birth"][0].min_items == 1
 
 
 def test_build_pydantic_model_for_person():
@@ -36,7 +33,7 @@ def test_build_pydantic_model_for_person():
     from test_app.models import Calendar, Person
 
     PydanticPerson = build_pydantic_return_model(Person)
-    """
+
     assert PydanticPerson.schema() == {
         "title": "Person",
         "type": "object",
@@ -70,16 +67,51 @@ def test_build_pydantic_model_for_person():
             "is_male": {"title": "Is Male", "default": True, "type": "boolean"},
             "has_books": {
                 "title": "Has Books",
+                "uniqueItems": True,
                 "type": "array",
-                "items": {"$ref": "#/definitions/BookRelated"},
+                "items": {
+                    "anyOf": [
+                        {"$ref": "#/definitions/BookRelated"},
+                        {"$ref": "#/definitions/NonOwnableBookRelated"},
+                        {"$ref": "#/definitions/DefinitelyNonOwnableBookRelated"},
+                    ]
+                },
             },
             "owns_pets": {
                 "title": "Owns Pets",
+                "uniqueItems": True,
                 "type": "array",
                 "items": {"$ref": "#/definitions/PetRelated"},
             },
+            "owns_things": {
+                "title": "Owns Things",
+                "maxItems": 1,
+                "uniqueItems": True,
+                "type": "array",
+                "items": {
+                    "anyOf": [
+                        {"$ref": "#/definitions/PetRelated"},
+                        {"$ref": "#/definitions/BookRelated"},
+                    ]
+                },
+            },
+            "has_root_vegetable": {
+                "title": "Has Root Vegetable",
+                "minItems": 1,
+                "maxItems": 1,
+                "uniqueItems": True,
+                "type": "array",
+                "items": {
+                    "anyOf": [
+                        {"$ref": "#/definitions/PotatoRelated"},
+                        {"$ref": "#/definitions/TurnipRelated"},
+                    ]
+                },
+            },
             "date_of_birth": {
                 "title": "Date Of Birth",
+                "minItems": 1,
+                "uniqueItems": True,
                 "type": "array",
                 "items": {
                     "anyOf": [
@@ -93,6 +125,8 @@ def test_build_pydantic_model_for_person():
             "last_dependent_change",
             "has_books",
             "owns_pets",
+            "owns_things",
+            "has_root_vegetable",
             "date_of_birth",
         ],
         "definitions": {
@@ -100,7 +134,44 @@ def test_build_pydantic_model_for_person():
                 "title": "BookRelated",
                 "type": "object",
                 "properties": {
-                    "real_type": {"title": "Real Type", "default": "book"},
+                    "real_type": {
+                        "title": "Real Type",
+                        "default": "book",
+                        "enum": ["book"],
+                        "type": "string",
+                    },
+                    "label": {"title": "Label", "type": "string"},
+                    "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+                    "relation_data": {"title": "Relation Data", "type": "object"},
+                },
+                "required": ["label", "uid", "relation_data"],
+            },
+            "NonOwnableBookRelated": {
+                "title": "NonOwnableBookRelated",
+                "type": "object",
+                "properties": {
+                    "real_type": {
+                        "title": "Real Type",
+                        "default": "nonownablebook",
+                        "enum": ["nonownablebook"],
+                        "type": "string",
+                    },
+                    "label": {"title": "Label", "type": "string"},
+                    "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+                    "relation_data": {"title": "Relation Data", "type": "object"},
+                },
+                "required": ["label", "uid", "relation_data"],
+            },
+            "DefinitelyNonOwnableBookRelated": {
+                "title": "DefinitelyNonOwnableBookRelated",
+                "type": "object",
+                "properties": {
+                    "real_type": {
+                        "title": "Real Type",
+                        "default": "definitelynonownablebook",
+                        "enum": ["definitelynonownablebook"],
+                        "type": "string",
+                    },
                     "label": {"title": "Label", "type": "string"},
                     "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
                     "relation_data": {"title": "Relation Data", "type": "object"},
@@ -111,7 +182,44 @@ def test_build_pydantic_model_for_person():
                 "title": "PetRelated",
                 "type": "object",
                 "properties": {
-                    "real_type": {"title": "Real Type", "default": "pet"},
+                    "real_type": {
+                        "title": "Real Type",
+                        "default": "pet",
+                        "enum": ["pet"],
+                        "type": "string",
+                    },
+                    "label": {"title": "Label", "type": "string"},
+                    "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+                    "relation_data": {"title": "Relation Data", "type": "object"},
+                },
+                "required": ["label", "uid", "relation_data"],
+            },
+            "PotatoRelated": {
+                "title": "PotatoRelated",
+                "type": "object",
+                "properties": {
+                    "real_type": {
+                        "title": "Real Type",
+                        "default": "potato",
+                        "enum": ["potato"],
+                        "type": "string",
+                    },
+                    "label": {"title": "Label", "type": "string"},
+                    "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+                    "relation_data": {"title": "Relation Data", "type": "object"},
+                },
+                "required": ["label", "uid", "relation_data"],
+            },
+            "TurnipRelated": {
+                "title": "TurnipRelated",
+                "type": "object",
+                "properties": {
+                    "real_type": {
+                        "title": "Real Type",
+                        "default": "turnip",
+                        "enum": ["turnip"],
+                        "type": "string",
+                    },
                     "label": {"title": "Label", "type": "string"},
                     "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
                     "relation_data": {"title": "Relation Data", "type": "object"},
@@ -122,7 +230,12 @@ def test_build_pydantic_model_for_person():
                 "title": "CalendarRelated",
                 "type": "object",
                 "properties": {
-                    "real_type": {"title": "Real Type", "default": "calendar"},
+                    "real_type": {
+                        "title": "Real Type",
+                        "default": "calendar",
+                        "enum": ["calendar"],
+                        "type": "string",
+                    },
                     "label": {"title": "Label", "type": "string"},
                     "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
                     "relation_data": {"title": "Relation Data", "type": "object"},
@@ -142,6 +255,7 @@ def test_build_pydantic_model_for_person():
                     "date": {"title": "Date", "type": "string"},
                     "calendar_format": {
                         "title": "Calendar Format",
+                        "uniqueItems": True,
                         "type": "array",
                         "items": {"$ref": "#/definitions/CalendarRelated"},
                     },
@@ -161,6 +275,7 @@ def test_build_pydantic_model_for_person():
                     "date": {"title": "Date", "type": "string"},
                     "calendar_format": {
                         "title": "Calendar Format",
+                        "uniqueItems": True,
                         "type": "array",
                         "items": {"$ref": "#/definitions/CalendarRelated"},
                     },
@@ -168,4 +283,4 @@ def test_build_pydantic_model_for_person():
                 "required": ["calendar_format"],
             },
         },
-    }"""
+    }

@@ -1,5 +1,11 @@
 # PROS CORE
 
+## TODO:
+
+A running list of stuff as it occurs to me
+
+- Reverse relation labels need to be unique for a Node class!
+
 
 ## Notes:
 
