@@ -69,6 +69,10 @@ class PetOwnershipRelation(RelationshipBase):
     purchased_when = StringProperty()
 
 
+class Organisation(Entity):
+    pass
+
+
 class Person(Animal):
     name = StringProperty()
     is_male = BooleanProperty(default=True)

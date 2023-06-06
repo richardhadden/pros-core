@@ -153,9 +153,8 @@ def test_build_pydantic_model_for_person():
                 },
                 "label": {"title": "Label", "type": "string"},
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                "relation_data": {"title": "Relation Data", "type": "object"},
             },
-            "required": ["label", "uid", "relation_data"],
+            "required": ["label", "uid"],
         },
         "Person_HasBooks_NonOwnableBook_Related": {
             "title": "Person_HasBooks_NonOwnableBook_Related",
@@ -169,9 +168,8 @@ def test_build_pydantic_model_for_person():
                 },
                 "label": {"title": "Label", "type": "string"},
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                "relation_data": {"title": "Relation Data", "type": "object"},
             },
-            "required": ["label", "uid", "relation_data"],
+            "required": ["label", "uid"],
         },
         "Person_HasBooks_DefinitelyNonOwnableBook_Related": {
             "title": "Person_HasBooks_DefinitelyNonOwnableBook_Related",
@@ -185,9 +183,15 @@ def test_build_pydantic_model_for_person():
                 },
                 "label": {"title": "Label", "type": "string"},
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                "relation_data": {"title": "Relation Data", "type": "object"},
             },
-            "required": ["label", "uid", "relation_data"],
+            "required": ["label", "uid"],
+        },
+        "Person_OwnsPets_Pet_Related_RelationData": {
+            "title": "Person_OwnsPets_Pet_Related_RelationData",
+            "type": "object",
+            "properties": {
+                "purchased_when": {"title": "Purchased When", "type": "string"}
+            },
         },
         "Person_OwnsPets_Pet_Related": {
             "title": "Person_OwnsPets_Pet_Related",
@@ -201,23 +205,9 @@ def test_build_pydantic_model_for_person():
                 },
                 "label": {"title": "Label", "type": "string"},
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                "relation_data": {"title": "Relation Data", "type": "object"},
-            },
-            "required": ["label", "uid", "relation_data"],
-        },
-        "Person_OwnsThings_Book_Related": {
-            "title": "Person_OwnsThings_Book_Related",
-            "type": "object",
-            "properties": {
-                "real_type": {
-                    "title": "Real Type",
-                    "default": "book",
-                    "enum": ["book"],
-                    "type": "string",
+                "relation_data": {
+                    "$ref": "#/definitions/Person_OwnsPets_Pet_Related_RelationData"
                 },
-                "label": {"title": "Label", "type": "string"},
-                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                "relation_data": {"title": "Relation Data", "type": "object"},
             },
             "required": ["label", "uid", "relation_data"],
         },
@@ -233,9 +223,23 @@ def test_build_pydantic_model_for_person():
                 },
                 "label": {"title": "Label", "type": "string"},
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                "relation_data": {"title": "Relation Data", "type": "object"},
             },
-            "required": ["label", "uid", "relation_data"],
+            "required": ["label", "uid"],
+        },
+        "Person_OwnsThings_Book_Related": {
+            "title": "Person_OwnsThings_Book_Related",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "book",
+                    "enum": ["book"],
+                    "type": "string",
+                },
+                "label": {"title": "Label", "type": "string"},
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+            },
+            "required": ["label", "uid"],
         },
         "Person_HasRootVegetable_Potato_Related": {
             "title": "Person_HasRootVegetable_Potato_Related",
@@ -249,9 +253,8 @@ def test_build_pydantic_model_for_person():
                 },
                 "label": {"title": "Label", "type": "string"},
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                "relation_data": {"title": "Relation Data", "type": "object"},
             },
-            "required": ["label", "uid", "relation_data"],
+            "required": ["label", "uid"],
         },
         "Person_HasRootVegetable_Turnip_Related": {
             "title": "Person_HasRootVegetable_Turnip_Related",
@@ -265,9 +268,8 @@ def test_build_pydantic_model_for_person():
                 },
                 "label": {"title": "Label", "type": "string"},
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                "relation_data": {"title": "Relation Data", "type": "object"},
             },
-            "required": ["label", "uid", "relation_data"],
+            "required": ["label", "uid"],
         },
         "DateImprecise_CalendarFormat_Calendar_Related": {
             "title": "DateImprecise_CalendarFormat_Calendar_Related",
@@ -281,9 +283,8 @@ def test_build_pydantic_model_for_person():
                 },
                 "label": {"title": "Label", "type": "string"},
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                "relation_data": {"title": "Relation Data", "type": "object"},
             },
-            "required": ["label", "uid", "relation_data"],
+            "required": ["label", "uid"],
         },
         "DateImprecise": {
             "title": "DateImprecise",
@@ -319,9 +320,8 @@ def test_build_pydantic_model_for_person():
                 },
                 "label": {"title": "Label", "type": "string"},
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                "relation_data": {"title": "Relation Data", "type": "object"},
             },
-            "required": ["label", "uid", "relation_data"],
+            "required": ["label", "uid"],
         },
         "DatePrecise": {
             "title": "DatePrecise",
@@ -406,8 +406,8 @@ def test_build_pydantic_model_for_person():
             "type": "array",
             "items": {
                 "anyOf": [
-                    {"$ref": "#/definitions/Person_OwnsThings_Book_Related"},
                     {"$ref": "#/definitions/Person_OwnsThings_Pet_Related"},
+                    {"$ref": "#/definitions/Person_OwnsThings_Book_Related"},
                 ]
             },
         },
@@ -458,9 +458,8 @@ def test_build_pydantic_model_for_person():
                 },
                 "label": {"title": "Label", "type": "string"},
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                "relation_data": {"title": "Relation Data", "type": "object"},
             },
-            "required": ["label", "uid", "relation_data"],
+            "required": ["label", "uid"],
         },
         "Person_HasBooks_NonOwnableBook_Related": {
             "title": "Person_HasBooks_NonOwnableBook_Related",
@@ -474,9 +473,8 @@ def test_build_pydantic_model_for_person():
                 },
                 "label": {"title": "Label", "type": "string"},
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                "relation_data": {"title": "Relation Data", "type": "object"},
             },
-            "required": ["label", "uid", "relation_data"],
+            "required": ["label", "uid"],
         },
         "Person_HasBooks_DefinitelyNonOwnableBook_Related": {
             "title": "Person_HasBooks_DefinitelyNonOwnableBook_Related",
@@ -490,9 +488,15 @@ def test_build_pydantic_model_for_person():
                 },
                 "label": {"title": "Label", "type": "string"},
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                "relation_data": {"title": "Relation Data", "type": "object"},
             },
-            "required": ["label", "uid", "relation_data"],
+            "required": ["label", "uid"],
+        },
+        "Person_OwnsPets_Pet_Related_RelationData": {
+            "title": "Person_OwnsPets_Pet_Related_RelationData",
+            "type": "object",
+            "properties": {
+                "purchased_when": {"title": "Purchased When", "type": "string"}
+            },
         },
         "Person_OwnsPets_Pet_Related": {
             "title": "Person_OwnsPets_Pet_Related",
@@ -506,23 +510,9 @@ def test_build_pydantic_model_for_person():
                 },
                 "label": {"title": "Label", "type": "string"},
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                "relation_data": {"title": "Relation Data", "type": "object"},
-            },
-            "required": ["label", "uid", "relation_data"],
-        },
-        "Person_OwnsThings_Book_Related": {
-            "title": "Person_OwnsThings_Book_Related",
-            "type": "object",
-            "properties": {
-                "real_type": {
-                    "title": "Real Type",
-                    "default": "book",
-                    "enum": ["book"],
-                    "type": "string",
+                "relation_data": {
+                    "$ref": "#/definitions/Person_OwnsPets_Pet_Related_RelationData"
                 },
-                "label": {"title": "Label", "type": "string"},
-                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                "relation_data": {"title": "Relation Data", "type": "object"},
             },
             "required": ["label", "uid", "relation_data"],
         },
@@ -538,9 +528,23 @@ def test_build_pydantic_model_for_person():
                 },
                 "label": {"title": "Label", "type": "string"},
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                "relation_data": {"title": "Relation Data", "type": "object"},
             },
-            "required": ["label", "uid", "relation_data"],
+            "required": ["label", "uid"],
+        },
+        "Person_OwnsThings_Book_Related": {
+            "title": "Person_OwnsThings_Book_Related",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "book",
+                    "enum": ["book"],
+                    "type": "string",
+                },
+                "label": {"title": "Label", "type": "string"},
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+            },
+            "required": ["label", "uid"],
         },
         "Person_HasRootVegetable_Potato_Related": {
             "title": "Person_HasRootVegetable_Potato_Related",
@@ -554,9 +558,8 @@ def test_build_pydantic_model_for_person():
                 },
                 "label": {"title": "Label", "type": "string"},
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                "relation_data": {"title": "Relation Data", "type": "object"},
             },
-            "required": ["label", "uid", "relation_data"],
+            "required": ["label", "uid"],
         },
         "Person_HasRootVegetable_Turnip_Related": {
             "title": "Person_HasRootVegetable_Turnip_Related",
@@ -570,9 +573,8 @@ def test_build_pydantic_model_for_person():
                 },
                 "label": {"title": "Label", "type": "string"},
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                "relation_data": {"title": "Relation Data", "type": "object"},
             },
-            "required": ["label", "uid", "relation_data"],
+            "required": ["label", "uid"],
         },
         "DateImprecise_CalendarFormat_Calendar_Related": {
             "title": "DateImprecise_CalendarFormat_Calendar_Related",
@@ -586,9 +588,8 @@ def test_build_pydantic_model_for_person():
                 },
                 "label": {"title": "Label", "type": "string"},
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                "relation_data": {"title": "Relation Data", "type": "object"},
             },
-            "required": ["label", "uid", "relation_data"],
+            "required": ["label", "uid"],
         },
         "DateImprecise": {
             "title": "DateImprecise",
@@ -624,9 +625,8 @@ def test_build_pydantic_model_for_person():
                 },
                 "label": {"title": "Label", "type": "string"},
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                "relation_data": {"title": "Relation Data", "type": "object"},
             },
-            "required": ["label", "uid", "relation_data"],
+            "required": ["label", "uid"],
         },
         "DatePrecise": {
             "title": "DatePrecise",

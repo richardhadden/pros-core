@@ -262,12 +262,12 @@ def build_relation_dict(rel: type[RelationshipDefinition]):
         "to_inline_createable", False
     )
 
-    relation_properties = [
-        property_name
+    relation_properties: dict[str, type[Property]] = {
+        property_name: property
         for property_name, property in rel.definition["model"].__dict__.items()
         if isinstance(property, Property)
         and property_name not in {"reverse_name", "to_inline_createable"}
-    ]
+    }
 
     return RelationshipType(
         target_model_name=rel._raw_class,

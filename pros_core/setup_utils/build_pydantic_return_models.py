@@ -14,6 +14,7 @@ from neomodel import (
     IntegerProperty,
     One,
     OneOrMore,
+    Property,
     RelationshipManager,
     StringProperty,
     UniqueIdProperty,
@@ -26,11 +27,45 @@ from pros_core.setup_utils.build_app_model_definitions import (
     build_properties,
     build_related_reifications,
     build_relationships,
+    build_reverse_relationships,
     build_subclasses_set,
 )
 from pydantic import UUID4, BaseModel, Field, conlist, create_model
 
 AnyItemType = TypeVar("AnyItemType")
+
+
+def map_prop_and_default(neomodel_property):
+    if isinstance(neomodel_property, StringProperty):
+        prop = str
+
+    elif isinstance(neomodel_property, BooleanProperty):
+        prop = bool
+
+    elif isinstance(neomodel_property, DateProperty):
+        prop = datetime.date
+
+    elif isinstance(neomodel_property, DateTimeProperty):
+        prop = datetime.datetime
+
+    elif isinstance(neomodel_property, FloatProperty):
+        prop = float
+
+    elif isinstance(neomodel_property, IntegerProperty):
+        prop = int
+
+    elif isinstance(neomodel_property, UniqueIdProperty):
+        prop = UUID4
+
+    if neomodel_property.required != True:
+        prop = Optional[prop]
+
+    if not callable(neomodel_property.default):
+        default = neomodel_property.default
+    else:
+        default = ...
+
+    return prop, default
 
 
 def build_pydantic_properties(
@@ -42,34 +77,7 @@ def build_pydantic_properties(
         if neomodel_property_name == "real_type":
             continue
 
-        if isinstance(neomodel_property, StringProperty):
-            prop = str
-
-        elif isinstance(neomodel_property, BooleanProperty):
-            prop = bool
-
-        elif isinstance(neomodel_property, DateProperty):
-            prop = datetime.date
-
-        elif isinstance(neomodel_property, DateTimeProperty):
-            prop = datetime.datetime
-
-        elif isinstance(neomodel_property, FloatProperty):
-            prop = float
-
-        elif isinstance(neomodel_property, IntegerProperty):
-            prop = int
-
-        elif isinstance(neomodel_property, UniqueIdProperty):
-            prop = UUID4
-
-        if neomodel_property.required != True:
-            prop = Optional[prop]
-
-        if not callable(neomodel_property.default):
-            default = neomodel_property.default
-        else:
-            default = ...
+        prop, default = map_prop_and_default(neomodel_property)
 
         pydantic_properties[neomodel_property_name] = (prop, default)
 
@@ -92,10 +100,30 @@ def build_relation_return_name(
     return f"{relationship_from_neomodel_class.__name__}_{to_pascal(relationship_name)}_{relationship_to_neomodel_class.__name__}_Related"
 
 
+def build_relation_data_model(
+    relation_properties: dict[str, Property], data_model_name
+):
+    pydantic_properties = {}
+    for neomodel_property_name, neomodel_property in relation_properties.items():
+        if neomodel_property_name == "real_type":
+            continue
+
+        prop, default = map_prop_and_default(neomodel_property)
+
+        pydantic_properties[neomodel_property_name] = (prop, default)
+
+    pydantic_model = create_model(
+        f"{data_model_name}_RelationData",
+        **pydantic_properties,
+    )
+    return pydantic_model
+
+
 def build_relation_return_model(
     relationship_from_neomodel_class: type[BaseNode],
     relationship_name: str,
     relationship_to_neomodel_class: type[BaseNode],
+    relation_properties: Optional[dict[str, Property]] = None,
     base=None,
 ) -> type[BaseModel]:
     class_name = build_relation_return_name(
@@ -106,13 +134,21 @@ def build_relation_return_model(
     if existing_pydantic_class := get_existing_base_model_class(class_name):
         return existing_pydantic_class
 
+    additional_model_properties = {}
+
+    if relation_properties:
+        relation_property_model = build_relation_data_model(
+            relation_properties, class_name
+        )
+        additional_model_properties["relation_data"] = (relation_property_model, ...)
+
     pydantic_model = create_model(
         class_name,
         __base__=base,
         real_type=(Literal[relationship_to_neomodel_class.__name__.lower()], relationship_to_neomodel_class.__name__.lower()),  # type: ignore
         label=(str, ...),
         uid=(UUID4, ...),
-        relation_data=(dict, ...),
+        **additional_model_properties,
     )
     return pydantic_model
 
@@ -152,9 +188,11 @@ def build_pydantic_return_relations(
                     relationship_from_neomodel_class=neomodel_class,
                     relationship_name=relationship_name,
                     relationship_to_neomodel_class=cls,
+                    relation_properties=relation_app_model.relation_properties,
                 )
                 for cls in relation_app_model.target_model.__classes_with_trait__
             ]
+
             pydantic_relations[relationship_name] = (
                 build_list_constraints_from_relation_manager(
                     Union[*tuple(pydantic_models_with_trait)], relation_app_model.relation_manager  # type: ignore
@@ -172,6 +210,7 @@ def build_pydantic_return_relations(
                 relationship_from_neomodel_class=neomodel_class,
                 relationship_name=relationship_name,
                 relationship_to_neomodel_class=relation_app_model.target_model,
+                relation_properties=relation_app_model.relation_properties,
             )
 
             # If base model is not abstract, add its pydantic model to the possible types
@@ -186,6 +225,7 @@ def build_pydantic_return_relations(
                     relationship_from_neomodel_class=neomodel_class,
                     relationship_name=relationship_name,
                     relationship_to_neomodel_class=subclass_app_model.model,
+                    relation_properties=relation_app_model.relation_properties,
                 )
                 types.append(subclass_pydantic_model)
 
@@ -260,7 +300,20 @@ def build_pydantic_return_child_nodes(
     return pydantic_properties
 
 
-def build_pydantic_model(neomodel_class: type[BaseNode]) -> BaseModel:
+def build_pydantic_return_reverse_relations(
+    neomodel_class: type[BaseNode],
+) -> type[BaseModel]:
+    neomodel_reverse_relation_nodes = build_reverse_relationships(neomodel_class)
+
+    for (
+        reverse_relation_name,
+        reverse_relation_app_model,
+    ) in neomodel_reverse_relation_nodes.items():
+        print(reverse_relation_name, reverse_relation_app_model)
+        assert False
+
+
+def build_pydantic_model(neomodel_class: type[BaseNode]) -> type[BaseModel]:
     """Build a standard pydantic model (all fields, rels)"""
     if existing_pydantic_model := get_existing_base_model_class(neomodel_class):
         return existing_pydantic_model
