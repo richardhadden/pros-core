@@ -11,6 +11,7 @@ There are two types of "abstract" nodes:
 2. `__abstract__` is a ProsCore setting: is allows a node anywhere in a hierarchy to be designated as "abstract". These are not directly createable, only via a subclass. However, they provide:
     - List view in API
     - Allow relations to such a node, which will allow the creation of one of its subtypes
+    - In this respect, similar to Traits (see below), but are inherited and viewable as list
 
 ### Traits
 Traits are like mixins, but allow cutting across hierarchies
