@@ -3,6 +3,7 @@ from pros_core.setup_utils import (
     build_routes,
     import_models,
     import_routers,
+    import_traits,
     setup_model_manager,
 )
 from pydantic import BaseSettings
@@ -11,6 +12,7 @@ from pydantic import BaseSettings
 def setup_app(_app: FastAPI, settings: BaseSettings) -> FastAPI:
     import_routers(_app, settings)
     models = import_models(settings)
-    setup_model_manager(models)
+    traits = import_traits(settings)
+    setup_model_manager(models, traits)
     build_routes(_app, models)
     return _app

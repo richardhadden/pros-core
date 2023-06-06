@@ -31,8 +31,9 @@ REVERSE_RELATIONS: DefaultDict[str, DefaultDict[str, dict]] = defaultdict(
 )
 
 
-class BaseStructuredNode(StructuredNode):
+class OverriddenStructuredNode(StructuredNode):
     __abstract_node__ = True
+    __is_trait__ = False
 
     @staticmethod
     def is_abstract_trait(cls) -> bool:
@@ -145,7 +146,7 @@ class BaseStructuredNode(StructuredNode):
                     pass
 
 
-class BaseNode(BaseStructuredNode):
+class BaseNode(OverriddenStructuredNode):
     """Base for all Neomodel nodes"""
 
     __abstract_node__ = True
@@ -194,7 +195,7 @@ class BaseNode(BaseStructuredNode):
             trait.__classes_with_trait__.add(cls)
 
 
-class AbstractTrait(BaseStructuredNode):
+class AbstractTrait(OverriddenStructuredNode):
     __abstract_node__ = True
     __is_trait__ = True
 
@@ -204,6 +205,7 @@ class AbstractTrait(BaseStructuredNode):
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
         cls.__classes_with_trait__ = set()
+        cls._meta = {}
 
 
 class InlineCreateableRelation(StructuredRel):

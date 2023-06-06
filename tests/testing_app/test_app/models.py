@@ -50,12 +50,12 @@ class DateBase(ChildNode):
 
 class DateImprecise(DateBase):
     date = StringProperty()
-    # calendar_format = RelationshipTo("Calendar", "is_in_calendar_format")
+    calendar_format = RelationshipTo("Calendar", "is_in_calendar_format")
 
 
 class DatePrecise(DateBase):
     date = StringProperty()
-    # calendar_format = RelationshipTo("Calendar", "is_in_calendar_format")
+    calendar_format = RelationshipTo("Calendar", "is_in_calendar_format")
 
 
 class PetOwnershipRelation(RelationshipBase):
@@ -70,6 +70,7 @@ class Person(Animal):
     owns_pets = Pet.as_inline_createable(
         "owned_by_person", relationship_model=PetOwnershipRelation
     )
+    owns_things = RelationshipTo("Ownable", "belongs_to_person")
 
     class Meta:
         display_name_plural = "People"

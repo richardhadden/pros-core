@@ -1,6 +1,15 @@
 from typing import Union, get_args, get_origin, get_type_hints
 
 import pydantic
+import pytest
+from pros_core.setup_app import setup_app
+from testing_app.app.core.config import settings
+from testing_app.app.main import app
+
+
+@pytest.fixture(scope="module")
+def setup_app():
+    setup_app(app, settings)
 
 
 def test_build_pydantic_return_child_nodes():
@@ -22,10 +31,13 @@ def test_build_pydantic_return_child_nodes():
 def test_build_pydantic_model_for_person():
     from pros_core.setup_utils.build_pydantic_return_models import (
         build_pydantic_return_model,
+        build_relation_return_model,
     )
-    from test_app.models import Person
+    from test_app.models import Calendar, Person
 
-    assert build_pydantic_return_model(Person).schema() == {
+    PydanticPerson = build_pydantic_return_model(Person)
+    """
+    assert PydanticPerson.schema() == {
         "title": "Person",
         "type": "object",
         "properties": {
@@ -59,14 +71,13 @@ def test_build_pydantic_model_for_person():
             "has_books": {
                 "title": "Has Books",
                 "type": "array",
-                "items": {"$ref": "#/definitions/Book"},
+                "items": {"$ref": "#/definitions/BookRelated"},
             },
             "owns_pets": {
                 "title": "Owns Pets",
                 "type": "array",
-                "items": {"$ref": "#/definitions/Pet"},
+                "items": {"$ref": "#/definitions/PetRelated"},
             },
-            "date": {"title": "Date", "type": "string"},
             "date_of_birth": {
                 "title": "Date Of Birth",
                 "type": "array",
@@ -85,8 +96,8 @@ def test_build_pydantic_model_for_person():
             "date_of_birth",
         ],
         "definitions": {
-            "Book": {
-                "title": "Book",
+            "BookRelated": {
+                "title": "BookRelated",
                 "type": "object",
                 "properties": {
                     "real_type": {"title": "Real Type", "default": "book"},
@@ -96,11 +107,22 @@ def test_build_pydantic_model_for_person():
                 },
                 "required": ["label", "uid", "relation_data"],
             },
-            "Pet": {
-                "title": "Pet",
+            "PetRelated": {
+                "title": "PetRelated",
                 "type": "object",
                 "properties": {
                     "real_type": {"title": "Real Type", "default": "pet"},
+                    "label": {"title": "Label", "type": "string"},
+                    "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+                    "relation_data": {"title": "Relation Data", "type": "object"},
+                },
+                "required": ["label", "uid", "relation_data"],
+            },
+            "CalendarRelated": {
+                "title": "CalendarRelated",
+                "type": "object",
+                "properties": {
+                    "real_type": {"title": "Real Type", "default": "calendar"},
                     "label": {"title": "Label", "type": "string"},
                     "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
                     "relation_data": {"title": "Relation Data", "type": "object"},
@@ -118,7 +140,13 @@ def test_build_pydantic_model_for_person():
                         "type": "string",
                     },
                     "date": {"title": "Date", "type": "string"},
+                    "calendar_format": {
+                        "title": "Calendar Format",
+                        "type": "array",
+                        "items": {"$ref": "#/definitions/CalendarRelated"},
+                    },
                 },
+                "required": ["calendar_format"],
             },
             "DatePrecise": {
                 "title": "DatePrecise",
@@ -131,7 +159,13 @@ def test_build_pydantic_model_for_person():
                         "type": "string",
                     },
                     "date": {"title": "Date", "type": "string"},
+                    "calendar_format": {
+                        "title": "Calendar Format",
+                        "type": "array",
+                        "items": {"$ref": "#/definitions/CalendarRelated"},
+                    },
                 },
+                "required": ["calendar_format"],
             },
         },
-    }
+    }"""

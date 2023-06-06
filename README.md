@@ -3,6 +3,15 @@
 
 ## Notes:
 
+### Abstract nodes
+
+There are two types of "abstract" nodes:
+
+1. `__abstract_node__` is from Neomodel; these are not created in at all (similar to Django abstract models)
+2. `__abstract__` is a ProsCore setting: is allows a node anywhere in a hierarchy to be designated as "abstract". These are not directly createable, only via a subclass. However, they provide:
+    - List view in API
+    - Allow relations to such a node, which will allow the creation of one of its subtypes
+
 ### Traits
 Traits are like mixins, but allow cutting across hierarchies
 
@@ -44,4 +53,5 @@ class Confiscation(AbstractNode):
 ```
 
 will allow `Confiscation` to be connected to anything that is *directly* ownable, i.e. `Book` and `Pet`.
+
 

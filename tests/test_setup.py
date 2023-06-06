@@ -9,6 +9,7 @@ from neomodel import (
     ZeroOrMore,
 )
 from pros_core.models import AbstractNode, AbstractReification, RelationshipBase
+from pros_core.setup_app import setup_app
 from pros_core.setup_utils import import_models
 from pros_core.setup_utils.model_manager import (
     AppModel,
@@ -20,6 +21,7 @@ from pros_core.setup_utils.model_manager import (
 from testing_app.app.core.config import settings
 from tests.testing_app.app.main import app
 
+setup_app(app, settings)
 """
 def test_api():
     client = TestClient(app)
@@ -545,3 +547,11 @@ def test_abstract_trait_gets_real_classes():
     from test_app.models import Book, Ownable, Pet
 
     assert Ownable.__classes_with_trait__ == {Book, Pet}
+
+
+def test_import_traits():
+    from pros_core.setup_utils.import_models import import_traits
+    from test_app.models import Ownable
+    from testing_app.app.core.config import settings
+
+    assert import_traits(settings) == [("test_app", "Ownable", Ownable)]
