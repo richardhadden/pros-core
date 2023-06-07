@@ -46,6 +46,7 @@ INSTALLED_APPS: list[str] = [
 ```
 
 - Add some models to `my_app/models.py` (automatially imported from here — maybe some better auto-discovery approach later?)
+- TODO: Need to add some database settings -- no database code currently in place (just dealt with introspecting models and creating API)
 - Run `fastapi run`!
 
 
