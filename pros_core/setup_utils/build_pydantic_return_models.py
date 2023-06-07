@@ -344,8 +344,11 @@ def build_pydantic_return_reverse_relations(
                 )
                 types.append(subclass_pydantic_model)
 
-            t_tuple = tuple(types)
-            t = list[Union[*t_tuple]]  # type: ignore
+            if types:
+                t_tuple = tuple(types)
+                t = list[Union[*t_tuple]]  # type: ignore
+            else:
+                t = list
             pydantic_relations[reverse_relation_name] = (
                 Optional[t],
                 None,
@@ -375,6 +378,7 @@ def build_pydantic_model(neomodel_class: type[BaseNode]) -> type[BaseModel]:
         **pydantic_child_nodes,
         **pydantic_reverse_relations,
     )
+
     return pydantic_model
 
 
@@ -383,5 +387,4 @@ def build_pydantic_return_model(neomodel_class: type[BaseNode]) -> type[BaseMode
 
     model = build_pydantic_model(neomodel_class)
 
-    # ic(Model.schema())
     return model

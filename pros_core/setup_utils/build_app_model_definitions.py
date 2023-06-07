@@ -20,6 +20,7 @@ from pros_core.models import (
     BaseNode,
     ChildNodeRelation,
 )
+from pydantic import BaseModel
 
 
 @dataclass
@@ -132,6 +133,7 @@ class AppModel:
     subclasses: AppModelSet[AppModelItem]
     parent_classes: AppModelSet[AppModelItem]
     reverse_relationships: dict[str, dict]
+    pydantic_return_model: type[BaseModel] = None
 
 
 class ModelManagerException(Exception):

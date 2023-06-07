@@ -14,6 +14,9 @@ from pros_core.setup_utils.build_app_model_definitions import (
     build_subclasses_hierarchy,
     build_subclasses_set,
 )
+from pros_core.setup_utils.build_pydantic_return_models import (
+    build_pydantic_return_model,
+)
 
 
 def create_app_model(
@@ -66,3 +69,12 @@ def setup_model_manager(
         ModelManager.add_model(app_model)
 
         model._app_model: AppModel = app_model
+
+    for app_model in ModelManager.models:
+        pydantic_return_model = (
+            build_pydantic_return_model(neomodel_class=app_model.model_class),
+        )
+
+        # TODO: heaven knows why this is a tuple not just the class... seems most improbable
+        # and can't find the error... attempt to figure that out!
+        app_model.pydantic_return_model = pydantic_return_model[0]

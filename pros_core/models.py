@@ -142,7 +142,7 @@ class OverriddenStructuredNode(StructuredNode):
                     rr = REVERSE_RELATIONS[v._raw_class][
                         v.definition["model"].__dict__["reverse_name"].default.lower()
                     ]
-                    print(cls, k, v._raw_class)
+
                     # assert False
                     rr["relation"] = v
                     rr["relation_to_class"] = cls

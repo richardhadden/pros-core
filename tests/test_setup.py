@@ -584,3 +584,12 @@ def test_import_traits():
     from testing_app.app.core.config import settings
 
     assert import_traits(settings) == [("test_app", "Ownable", Ownable)]
+
+
+def test_model_manager_has_pydantic_return_class():
+    from pros_core import ModelManager
+
+    assert (
+        repr(ModelManager("person").pydantic_return_model)
+        == "<class 'pydantic.main.Person'>"
+    )
