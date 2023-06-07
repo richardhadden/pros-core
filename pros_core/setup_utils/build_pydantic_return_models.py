@@ -55,6 +55,7 @@ def map_prop_and_default(neomodel_property):
         prop = int
 
     elif isinstance(neomodel_property, UniqueIdProperty):
+        print(neomodel_property, "is uid")
         prop = UUID4
 
     if neomodel_property.required != True:
@@ -97,7 +98,7 @@ def build_relation_return_name(
     relationship_name: str,
     relationship_to_neomodel_class: type[BaseNode],
 ):
-    return f"{relationship_from_neomodel_class.__name__}_{to_pascal(relationship_name)}_{relationship_to_neomodel_class.__name__}_Related"
+    return f"{relationship_from_neomodel_class.__name__}_{to_pascal(relationship_name)}_{relationship_to_neomodel_class.__name__}_RelatedItem"
 
 
 def build_relation_data_model(
@@ -313,9 +314,9 @@ def build_pydantic_return_reverse_relations(
         if reverse_relation_app_model.relationship_from_model.__is_trait__:
             pydantic_models_with_trait = [
                 build_relation_return_model(
-                    relationship_from_neomodel_class=cls,
-                    relationship_name=reverse_relation_app_model.forward_relationship_label,
-                    relationship_to_neomodel_class=neomodel_class,
+                    relationship_from_neomodel_class=neomodel_class,
+                    relationship_name=reverse_relation_app_model.reverse_relationship_label,
+                    relationship_to_neomodel_class=cls,
                 )
                 for cls in reverse_relation_app_model.relationship_from_model.__classes_with_trait__
             ]
@@ -328,9 +329,9 @@ def build_pydantic_return_reverse_relations(
         else:
             if not reverse_relation_app_model.relationship_from_model.is_abstract:
                 base_model = build_relation_return_model(
-                    relationship_from_neomodel_class=reverse_relation_app_model.relationship_from_model,
-                    relationship_name=reverse_relation_app_model.forward_relationship_label,
-                    relationship_to_neomodel_class=neomodel_class,
+                    relationship_from_neomodel_class=neomodel_class,
+                    relationship_name=reverse_relation_app_model.reverse_relationship_label,
+                    relationship_to_neomodel_class=reverse_relation_app_model.relationship_from_model,
                 )
                 types.append(base_model)
 
@@ -338,9 +339,9 @@ def build_pydantic_return_reverse_relations(
                 reverse_relation_app_model.relationship_from_model
             ):
                 subclass_pydantic_model = build_relation_return_model(
-                    relationship_from_neomodel_class=subclass_app_model.model,
-                    relationship_name=reverse_relation_app_model.forward_relationship_label,
-                    relationship_to_neomodel_class=neomodel_class,
+                    relationship_from_neomodel_class=neomodel_class,
+                    relationship_name=reverse_relation_app_model.reverse_relationship_label,
+                    relationship_to_neomodel_class=subclass_app_model.model,
                 )
                 types.append(subclass_pydantic_model)
 
@@ -373,6 +374,7 @@ def build_pydantic_model(neomodel_class: type[BaseNode]) -> type[BaseModel]:
             Literal[neomodel_class.__name__.lower()],  # type: ignore
             neomodel_class.__name__.lower(),
         ),
+        uid=(UUID4, ...),
         **pydantic_properties,
         **pydantic_relations,
         **pydantic_child_nodes,

@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from pros_core.setup_utils import (
+    ModelManager,
     build_routes,
     import_models,
     import_routers,
@@ -14,5 +15,5 @@ def setup_app(_app: FastAPI, settings: BaseSettings) -> FastAPI:
     models = import_models(settings)
     traits = import_traits(settings)
     setup_model_manager(models, traits)
-    build_routes(_app, models)
+    build_routes(_app, models, ModelManager)
     return _app

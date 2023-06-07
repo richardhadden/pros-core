@@ -40,6 +40,7 @@ def test_build_pydantic_model_for_person():
     assert real_type["enum"] == ["person"]
     assert real_type["type"] == "string"
 
+    assert "uid" in s["properties"]
     assert s["properties"]["label"] == {"title": "Label", "type": "string"}
     assert s["properties"]["created_by"] == {"title": "Created By", "type": "string"}
     assert s["properties"]["created_when"] == {
@@ -80,21 +81,21 @@ def test_build_pydantic_model_for_person():
     assert has_books_items
     assert has_books_items["anyOf"]
     assert len(has_books_items["anyOf"]) == 3
-    assert {"$ref": "#/definitions/Person_HasBooks_Book_Related"} in has_books_items[
-        "anyOf"
-    ]
     assert {
-        "$ref": "#/definitions/Person_HasBooks_NonOwnableBook_Related"
+        "$ref": "#/definitions/Person_HasBooks_Book_RelatedItem"
     } in has_books_items["anyOf"]
     assert {
-        "$ref": "#/definitions/Person_HasBooks_DefinitelyNonOwnableBook_Related"
+        "$ref": "#/definitions/Person_HasBooks_NonOwnableBook_RelatedItem"
+    } in has_books_items["anyOf"]
+    assert {
+        "$ref": "#/definitions/Person_HasBooks_DefinitelyNonOwnableBook_RelatedItem"
     } in has_books_items["anyOf"]
 
     assert s["properties"]["owns_pets"] == {
         "title": "Owns Pets",
         "uniqueItems": True,
         "type": "array",
-        "items": {"$ref": "#/definitions/Person_OwnsPets_Pet_Related"},
+        "items": {"$ref": "#/definitions/Person_OwnsPets_Pet_RelatedItem"},
     }
 
     owns_things = s["properties"]["owns_things"]
@@ -107,11 +108,11 @@ def test_build_pydantic_model_for_person():
     owns_things_items = owns_things["items"]
     assert owns_things_items
     assert len(owns_things_items["anyOf"]) == 2
-    assert {"$ref": "#/definitions/Person_OwnsThings_Pet_Related"} in owns_things_items[
-        "anyOf"
-    ]
     assert {
-        "$ref": "#/definitions/Person_OwnsThings_Book_Related"
+        "$ref": "#/definitions/Person_OwnsThings_Pet_RelatedItem"
+    } in owns_things_items["anyOf"]
+    assert {
+        "$ref": "#/definitions/Person_OwnsThings_Book_RelatedItem"
     } in owns_things_items["anyOf"]
 
     has_root_vegetable = s["properties"]["has_root_vegetable"]
@@ -125,10 +126,10 @@ def test_build_pydantic_model_for_person():
     assert has_root_vegetable_items
     assert len(has_root_vegetable_items["anyOf"]) == 2
     assert {
-        "$ref": "#/definitions/Person_HasRootVegetable_Potato_Related"
+        "$ref": "#/definitions/Person_HasRootVegetable_Potato_RelatedItem"
     } in has_root_vegetable_items["anyOf"]
     assert {
-        "$ref": "#/definitions/Person_HasRootVegetable_Turnip_Related"
+        "$ref": "#/definitions/Person_HasRootVegetable_Turnip_RelatedItem"
     } in has_root_vegetable_items["anyOf"]
 
     is_owner_of = s["properties"]["is_owner_of"]
@@ -137,24 +138,24 @@ def test_build_pydantic_model_for_person():
     assert is_owner_of["type"] == "array"
     is_owner_of_items = is_owner_of["items"]
     assert len(is_owner_of_items["anyOf"]) == 2
-    assert {"$ref": "#/definitions/Pet_Owner_Person_Related"} in is_owner_of_items[
-        "anyOf"
-    ]
-    assert {"$ref": "#/definitions/Book_Owner_Person_Related"} in is_owner_of_items[
-        "anyOf"
-    ]
+    assert {
+        "$ref": "#/definitions/Person_IsOwnerOf_Pet_RelatedItem"
+    } in is_owner_of_items["anyOf"]
+    assert {
+        "$ref": "#/definitions/Person_IsOwnerOf_Book_RelatedItem"
+    } in is_owner_of_items["anyOf"]
 
     assert s["properties"]["is_member_of"] == {
         "title": "Is Member Of",
         "type": "array",
-        "items": {"$ref": "#/definitions/Organisation_HasMember_Person_Related"},
+        "items": {"$ref": "#/definitions/Person_IsMemberOf_Organisation_RelatedItem"},
     }
 
     assert s["properties"]["is_identified_by"] == {
         "title": "Is Identified By",
         "type": "array",
         "items": {
-            "$ref": "#/definitions/PersonIdentification_PersonsIdentified_Person_Related"
+            "$ref": "#/definitions/Person_IsIdentifiedBy_PersonIdentification_RelatedItem"
         },
     }
 
@@ -165,17 +166,20 @@ def test_build_pydantic_model_for_person():
     is_author_of_items = is_author_of["items"]
     assert is_author_of_items
     assert len(is_author_of_items["anyOf"]) == 3
-    assert {"$ref": "#/definitions/Book_Author_Person_Related"} in is_author_of_items[
-        "anyOf"
-    ]
+    assert {
+        "$ref": "#/definitions/Person_IsAuthorOf_Book_RelatedItem"
+    } in is_author_of_items["anyOf"]
 
     assert s["properties"]["is_involved_in_happening"] == {
         "title": "Is Involved In Happening",
         "type": "array",
-        "items": {"$ref": "#/definitions/Happening_InvolvesEntity_Person_Related"},
+        "items": {
+            "$ref": "#/definitions/Person_IsInvolvedInHappening_Happening_RelatedItem"
+        },
     }
 
     assert s["required"] == [
+        "uid",
         "last_dependent_change",
         "has_books",
         "owns_pets",
@@ -185,8 +189,8 @@ def test_build_pydantic_model_for_person():
     ]
 
     assert s["definitions"] == {
-        "Person_HasBooks_Book_Related": {
-            "title": "Person_HasBooks_Book_Related",
+        "Person_HasBooks_Book_RelatedItem": {
+            "title": "Person_HasBooks_Book_RelatedItem",
             "type": "object",
             "properties": {
                 "real_type": {
@@ -200,8 +204,8 @@ def test_build_pydantic_model_for_person():
             },
             "required": ["label", "uid"],
         },
-        "Person_HasBooks_NonOwnableBook_Related": {
-            "title": "Person_HasBooks_NonOwnableBook_Related",
+        "Person_HasBooks_NonOwnableBook_RelatedItem": {
+            "title": "Person_HasBooks_NonOwnableBook_RelatedItem",
             "type": "object",
             "properties": {
                 "real_type": {
@@ -215,8 +219,8 @@ def test_build_pydantic_model_for_person():
             },
             "required": ["label", "uid"],
         },
-        "Person_HasBooks_DefinitelyNonOwnableBook_Related": {
-            "title": "Person_HasBooks_DefinitelyNonOwnableBook_Related",
+        "Person_HasBooks_DefinitelyNonOwnableBook_RelatedItem": {
+            "title": "Person_HasBooks_DefinitelyNonOwnableBook_RelatedItem",
             "type": "object",
             "properties": {
                 "real_type": {
@@ -230,15 +234,15 @@ def test_build_pydantic_model_for_person():
             },
             "required": ["label", "uid"],
         },
-        "Person_OwnsPets_Pet_Related_RelationData": {
-            "title": "Person_OwnsPets_Pet_Related_RelationData",
+        "Person_OwnsPets_Pet_RelatedItem_RelationData": {
+            "title": "Person_OwnsPets_Pet_RelatedItem_RelationData",
             "type": "object",
             "properties": {
                 "purchased_when": {"title": "Purchased When", "type": "string"}
             },
         },
-        "Person_OwnsPets_Pet_Related": {
-            "title": "Person_OwnsPets_Pet_Related",
+        "Person_OwnsPets_Pet_RelatedItem": {
+            "title": "Person_OwnsPets_Pet_RelatedItem",
             "type": "object",
             "properties": {
                 "real_type": {
@@ -250,13 +254,28 @@ def test_build_pydantic_model_for_person():
                 "label": {"title": "Label", "type": "string"},
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
                 "relation_data": {
-                    "$ref": "#/definitions/Person_OwnsPets_Pet_Related_RelationData"
+                    "$ref": "#/definitions/Person_OwnsPets_Pet_RelatedItem_RelationData"
                 },
             },
             "required": ["label", "uid", "relation_data"],
         },
-        "Person_OwnsThings_Book_Related": {
-            "title": "Person_OwnsThings_Book_Related",
+        "Person_OwnsThings_Pet_RelatedItem": {
+            "title": "Person_OwnsThings_Pet_RelatedItem",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "pet",
+                    "enum": ["pet"],
+                    "type": "string",
+                },
+                "label": {"title": "Label", "type": "string"},
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+            },
+            "required": ["label", "uid"],
+        },
+        "Person_OwnsThings_Book_RelatedItem": {
+            "title": "Person_OwnsThings_Book_RelatedItem",
             "type": "object",
             "properties": {
                 "real_type": {
@@ -270,23 +289,8 @@ def test_build_pydantic_model_for_person():
             },
             "required": ["label", "uid"],
         },
-        "Person_OwnsThings_Pet_Related": {
-            "title": "Person_OwnsThings_Pet_Related",
-            "type": "object",
-            "properties": {
-                "real_type": {
-                    "title": "Real Type",
-                    "default": "pet",
-                    "enum": ["pet"],
-                    "type": "string",
-                },
-                "label": {"title": "Label", "type": "string"},
-                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-            },
-            "required": ["label", "uid"],
-        },
-        "Person_HasRootVegetable_Potato_Related": {
-            "title": "Person_HasRootVegetable_Potato_Related",
+        "Person_HasRootVegetable_Potato_RelatedItem": {
+            "title": "Person_HasRootVegetable_Potato_RelatedItem",
             "type": "object",
             "properties": {
                 "real_type": {
@@ -300,8 +304,8 @@ def test_build_pydantic_model_for_person():
             },
             "required": ["label", "uid"],
         },
-        "Person_HasRootVegetable_Turnip_Related": {
-            "title": "Person_HasRootVegetable_Turnip_Related",
+        "Person_HasRootVegetable_Turnip_RelatedItem": {
+            "title": "Person_HasRootVegetable_Turnip_RelatedItem",
             "type": "object",
             "properties": {
                 "real_type": {
@@ -315,8 +319,8 @@ def test_build_pydantic_model_for_person():
             },
             "required": ["label", "uid"],
         },
-        "DateImprecise_CalendarFormat_Calendar_Related": {
-            "title": "DateImprecise_CalendarFormat_Calendar_Related",
+        "DateImprecise_CalendarFormat_Calendar_RelatedItem": {
+            "title": "DateImprecise_CalendarFormat_Calendar_RelatedItem",
             "type": "object",
             "properties": {
                 "real_type": {
@@ -340,20 +344,21 @@ def test_build_pydantic_model_for_person():
                     "enum": ["dateimprecise"],
                     "type": "string",
                 },
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
                 "date": {"title": "Date", "type": "string"},
                 "calendar_format": {
                     "title": "Calendar Format",
                     "uniqueItems": True,
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/DateImprecise_CalendarFormat_Calendar_Related"
+                        "$ref": "#/definitions/DateImprecise_CalendarFormat_Calendar_RelatedItem"
                     },
                 },
             },
-            "required": ["calendar_format"],
+            "required": ["uid", "calendar_format"],
         },
-        "DatePrecise_CalendarFormat_Calendar_Related": {
-            "title": "DatePrecise_CalendarFormat_Calendar_Related",
+        "DatePrecise_CalendarFormat_Calendar_RelatedItem": {
+            "title": "DatePrecise_CalendarFormat_Calendar_RelatedItem",
             "type": "object",
             "properties": {
                 "real_type": {
@@ -377,26 +382,27 @@ def test_build_pydantic_model_for_person():
                     "enum": ["dateprecise"],
                     "type": "string",
                 },
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
                 "date": {"title": "Date", "type": "string"},
                 "calendar_format": {
                     "title": "Calendar Format",
                     "uniqueItems": True,
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/DatePrecise_CalendarFormat_Calendar_Related"
+                        "$ref": "#/definitions/DatePrecise_CalendarFormat_Calendar_RelatedItem"
                     },
                 },
             },
-            "required": ["calendar_format"],
+            "required": ["uid", "calendar_format"],
         },
-        "Book_Owner_Person_Related": {
-            "title": "Book_Owner_Person_Related",
+        "Person_IsOwnerOf_Pet_RelatedItem": {
+            "title": "Person_IsOwnerOf_Pet_RelatedItem",
             "type": "object",
             "properties": {
                 "real_type": {
                     "title": "Real Type",
-                    "default": "person",
-                    "enum": ["person"],
+                    "default": "pet",
+                    "enum": ["pet"],
                     "type": "string",
                 },
                 "label": {"title": "Label", "type": "string"},
@@ -404,14 +410,14 @@ def test_build_pydantic_model_for_person():
             },
             "required": ["label", "uid"],
         },
-        "Pet_Owner_Person_Related": {
-            "title": "Pet_Owner_Person_Related",
+        "Person_IsOwnerOf_Book_RelatedItem": {
+            "title": "Person_IsOwnerOf_Book_RelatedItem",
             "type": "object",
             "properties": {
                 "real_type": {
                     "title": "Real Type",
-                    "default": "person",
-                    "enum": ["person"],
+                    "default": "book",
+                    "enum": ["book"],
                     "type": "string",
                 },
                 "label": {"title": "Label", "type": "string"},
@@ -419,14 +425,14 @@ def test_build_pydantic_model_for_person():
             },
             "required": ["label", "uid"],
         },
-        "Organisation_HasMember_Person_Related": {
-            "title": "Organisation_HasMember_Person_Related",
+        "Person_IsMemberOf_Organisation_RelatedItem": {
+            "title": "Person_IsMemberOf_Organisation_RelatedItem",
             "type": "object",
             "properties": {
                 "real_type": {
                     "title": "Real Type",
-                    "default": "person",
-                    "enum": ["person"],
+                    "default": "organisation",
+                    "enum": ["organisation"],
                     "type": "string",
                 },
                 "label": {"title": "Label", "type": "string"},
@@ -434,14 +440,14 @@ def test_build_pydantic_model_for_person():
             },
             "required": ["label", "uid"],
         },
-        "PersonIdentification_PersonsIdentified_Person_Related": {
-            "title": "PersonIdentification_PersonsIdentified_Person_Related",
+        "Person_IsIdentifiedBy_PersonIdentification_RelatedItem": {
+            "title": "Person_IsIdentifiedBy_PersonIdentification_RelatedItem",
             "type": "object",
             "properties": {
                 "real_type": {
                     "title": "Real Type",
-                    "default": "person",
-                    "enum": ["person"],
+                    "default": "personidentification",
+                    "enum": ["personidentification"],
                     "type": "string",
                 },
                 "label": {"title": "Label", "type": "string"},
@@ -449,14 +455,14 @@ def test_build_pydantic_model_for_person():
             },
             "required": ["label", "uid"],
         },
-        "Book_Author_Person_Related": {
-            "title": "Book_Author_Person_Related",
+        "Person_IsAuthorOf_Book_RelatedItem": {
+            "title": "Person_IsAuthorOf_Book_RelatedItem",
             "type": "object",
             "properties": {
                 "real_type": {
                     "title": "Real Type",
-                    "default": "person",
-                    "enum": ["person"],
+                    "default": "book",
+                    "enum": ["book"],
                     "type": "string",
                 },
                 "label": {"title": "Label", "type": "string"},
@@ -464,14 +470,14 @@ def test_build_pydantic_model_for_person():
             },
             "required": ["label", "uid"],
         },
-        "NonOwnableBook_Author_Person_Related": {
-            "title": "NonOwnableBook_Author_Person_Related",
+        "Person_IsAuthorOf_NonOwnableBook_RelatedItem": {
+            "title": "Person_IsAuthorOf_NonOwnableBook_RelatedItem",
             "type": "object",
             "properties": {
                 "real_type": {
                     "title": "Real Type",
-                    "default": "person",
-                    "enum": ["person"],
+                    "default": "nonownablebook",
+                    "enum": ["nonownablebook"],
                     "type": "string",
                 },
                 "label": {"title": "Label", "type": "string"},
@@ -479,14 +485,14 @@ def test_build_pydantic_model_for_person():
             },
             "required": ["label", "uid"],
         },
-        "DefinitelyNonOwnableBook_Author_Person_Related": {
-            "title": "DefinitelyNonOwnableBook_Author_Person_Related",
+        "Person_IsAuthorOf_DefinitelyNonOwnableBook_RelatedItem": {
+            "title": "Person_IsAuthorOf_DefinitelyNonOwnableBook_RelatedItem",
             "type": "object",
             "properties": {
                 "real_type": {
                     "title": "Real Type",
-                    "default": "person",
-                    "enum": ["person"],
+                    "default": "definitelynonownablebook",
+                    "enum": ["definitelynonownablebook"],
                     "type": "string",
                 },
                 "label": {"title": "Label", "type": "string"},
@@ -494,14 +500,14 @@ def test_build_pydantic_model_for_person():
             },
             "required": ["label", "uid"],
         },
-        "Happening_InvolvesEntity_Person_Related": {
-            "title": "Happening_InvolvesEntity_Person_Related",
+        "Person_IsInvolvedInHappening_Happening_RelatedItem": {
+            "title": "Person_IsInvolvedInHappening_Happening_RelatedItem",
             "type": "object",
             "properties": {
                 "real_type": {
                     "title": "Real Type",
-                    "default": "person",
-                    "enum": ["person"],
+                    "default": "happening",
+                    "enum": ["happening"],
                     "type": "string",
                 },
                 "label": {"title": "Label", "type": "string"},
@@ -510,3 +516,485 @@ def test_build_pydantic_model_for_person():
             "required": ["label", "uid"],
         },
     }
+
+
+{
+    "title": "Person",
+    "type": "object",
+    "properties": {
+        "real_type": {
+            "title": "Real Type",
+            "default": "person",
+            "enum": ["person"],
+            "type": "string",
+        },
+        "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+        "label": {"title": "Label", "type": "string"},
+        "created_by": {"title": "Created By", "type": "string"},
+        "created_when": {
+            "title": "Created When",
+            "type": "string",
+            "format": "date-time",
+        },
+        "modified_by": {"title": "Modified By", "type": "string"},
+        "modified_when": {
+            "title": "Modified When",
+            "type": "string",
+            "format": "date-time",
+        },
+        "is_deleted": {"title": "Is Deleted", "default": False, "type": "boolean"},
+        "last_dependent_change": {
+            "title": "Last Dependent Change",
+            "type": "string",
+            "format": "date-time",
+        },
+        "name": {"title": "Name", "type": "string"},
+        "is_male": {"title": "Is Male", "default": True, "type": "boolean"},
+        "has_books": {
+            "title": "Has Books",
+            "uniqueItems": True,
+            "type": "array",
+            "items": {
+                "anyOf": [
+                    {"$ref": "#/definitions/Person_HasBooks_Book_RelatedItem"},
+                    {
+                        "$ref": "#/definitions/Person_HasBooks_NonOwnableBook_RelatedItem"
+                    },
+                    {
+                        "$ref": "#/definitions/Person_HasBooks_DefinitelyNonOwnableBook_RelatedItem"
+                    },
+                ]
+            },
+        },
+        "owns_pets": {
+            "title": "Owns Pets",
+            "uniqueItems": True,
+            "type": "array",
+            "items": {"$ref": "#/definitions/Person_OwnsPets_Pet_RelatedItem"},
+        },
+        "owns_things": {
+            "title": "Owns Things",
+            "maxItems": 1,
+            "uniqueItems": True,
+            "type": "array",
+            "items": {
+                "anyOf": [
+                    {"$ref": "#/definitions/Person_OwnsThings_Pet_RelatedItem"},
+                    {"$ref": "#/definitions/Person_OwnsThings_Book_RelatedItem"},
+                ]
+            },
+        },
+        "has_root_vegetable": {
+            "title": "Has Root Vegetable",
+            "minItems": 1,
+            "maxItems": 1,
+            "uniqueItems": True,
+            "type": "array",
+            "items": {
+                "anyOf": [
+                    {
+                        "$ref": "#/definitions/Person_HasRootVegetable_Potato_RelatedItem"
+                    },
+                    {
+                        "$ref": "#/definitions/Person_HasRootVegetable_Turnip_RelatedItem"
+                    },
+                ]
+            },
+        },
+        "date_of_birth": {
+            "title": "Date Of Birth",
+            "minItems": 1,
+            "uniqueItems": True,
+            "type": "array",
+            "items": {
+                "anyOf": [
+                    {"$ref": "#/definitions/DateImprecise"},
+                    {"$ref": "#/definitions/DatePrecise"},
+                ]
+            },
+        },
+        "is_owner_of": {
+            "title": "Is Owner Of",
+            "type": "array",
+            "items": {
+                "anyOf": [
+                    {"$ref": "#/definitions/Person_IsOwnerOf_Pet_RelatedItem"},
+                    {"$ref": "#/definitions/Person_IsOwnerOf_Book_RelatedItem"},
+                ]
+            },
+        },
+        "is_member_of": {
+            "title": "Is Member Of",
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/Person_IsMemberOf_Organisation_RelatedItem"
+            },
+        },
+        "is_identified_by": {
+            "title": "Is Identified By",
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/Person_IsIdentifiedBy_PersonIdentification_RelatedItem"
+            },
+        },
+        "is_author_of": {
+            "title": "Is Author Of",
+            "type": "array",
+            "items": {
+                "anyOf": [
+                    {"$ref": "#/definitions/Person_IsAuthorOf_Book_RelatedItem"},
+                    {
+                        "$ref": "#/definitions/Person_IsAuthorOf_NonOwnableBook_RelatedItem"
+                    },
+                    {
+                        "$ref": "#/definitions/Person_IsAuthorOf_DefinitelyNonOwnableBook_RelatedItem"
+                    },
+                ]
+            },
+        },
+        "is_involved_in_happening": {
+            "title": "Is Involved In Happening",
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/Person_IsInvolvedInHappening_Happening_RelatedItem"
+            },
+        },
+    },
+    "required": [
+        "uid",
+        "last_dependent_change",
+        "has_books",
+        "owns_pets",
+        "owns_things",
+        "has_root_vegetable",
+        "date_of_birth",
+    ],
+    "definitions": {
+        "Person_HasBooks_Book_RelatedItem": {
+            "title": "Person_HasBooks_Book_RelatedItem",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "book",
+                    "enum": ["book"],
+                    "type": "string",
+                },
+                "label": {"title": "Label", "type": "string"},
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+            },
+            "required": ["label", "uid"],
+        },
+        "Person_HasBooks_NonOwnableBook_RelatedItem": {
+            "title": "Person_HasBooks_NonOwnableBook_RelatedItem",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "nonownablebook",
+                    "enum": ["nonownablebook"],
+                    "type": "string",
+                },
+                "label": {"title": "Label", "type": "string"},
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+            },
+            "required": ["label", "uid"],
+        },
+        "Person_HasBooks_DefinitelyNonOwnableBook_RelatedItem": {
+            "title": "Person_HasBooks_DefinitelyNonOwnableBook_RelatedItem",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "definitelynonownablebook",
+                    "enum": ["definitelynonownablebook"],
+                    "type": "string",
+                },
+                "label": {"title": "Label", "type": "string"},
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+            },
+            "required": ["label", "uid"],
+        },
+        "Person_OwnsPets_Pet_RelatedItem_RelationData": {
+            "title": "Person_OwnsPets_Pet_RelatedItem_RelationData",
+            "type": "object",
+            "properties": {
+                "purchased_when": {"title": "Purchased When", "type": "string"}
+            },
+        },
+        "Person_OwnsPets_Pet_RelatedItem": {
+            "title": "Person_OwnsPets_Pet_RelatedItem",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "pet",
+                    "enum": ["pet"],
+                    "type": "string",
+                },
+                "label": {"title": "Label", "type": "string"},
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+                "relation_data": {
+                    "$ref": "#/definitions/Person_OwnsPets_Pet_RelatedItem_RelationData"
+                },
+            },
+            "required": ["label", "uid", "relation_data"],
+        },
+        "Person_OwnsThings_Pet_RelatedItem": {
+            "title": "Person_OwnsThings_Pet_RelatedItem",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "pet",
+                    "enum": ["pet"],
+                    "type": "string",
+                },
+                "label": {"title": "Label", "type": "string"},
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+            },
+            "required": ["label", "uid"],
+        },
+        "Person_OwnsThings_Book_RelatedItem": {
+            "title": "Person_OwnsThings_Book_RelatedItem",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "book",
+                    "enum": ["book"],
+                    "type": "string",
+                },
+                "label": {"title": "Label", "type": "string"},
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+            },
+            "required": ["label", "uid"],
+        },
+        "Person_HasRootVegetable_Potato_RelatedItem": {
+            "title": "Person_HasRootVegetable_Potato_RelatedItem",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "potato",
+                    "enum": ["potato"],
+                    "type": "string",
+                },
+                "label": {"title": "Label", "type": "string"},
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+            },
+            "required": ["label", "uid"],
+        },
+        "Person_HasRootVegetable_Turnip_RelatedItem": {
+            "title": "Person_HasRootVegetable_Turnip_RelatedItem",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "turnip",
+                    "enum": ["turnip"],
+                    "type": "string",
+                },
+                "label": {"title": "Label", "type": "string"},
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+            },
+            "required": ["label", "uid"],
+        },
+        "DateImprecise_CalendarFormat_Calendar_RelatedItem": {
+            "title": "DateImprecise_CalendarFormat_Calendar_RelatedItem",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "calendar",
+                    "enum": ["calendar"],
+                    "type": "string",
+                },
+                "label": {"title": "Label", "type": "string"},
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+            },
+            "required": ["label", "uid"],
+        },
+        "DateImprecise": {
+            "title": "DateImprecise",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "dateimprecise",
+                    "enum": ["dateimprecise"],
+                    "type": "string",
+                },
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+                "date": {"title": "Date", "type": "string"},
+                "calendar_format": {
+                    "title": "Calendar Format",
+                    "uniqueItems": True,
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DateImprecise_CalendarFormat_Calendar_RelatedItem"
+                    },
+                },
+            },
+            "required": ["uid", "calendar_format"],
+        },
+        "DatePrecise_CalendarFormat_Calendar_RelatedItem": {
+            "title": "DatePrecise_CalendarFormat_Calendar_RelatedItem",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "calendar",
+                    "enum": ["calendar"],
+                    "type": "string",
+                },
+                "label": {"title": "Label", "type": "string"},
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+            },
+            "required": ["label", "uid"],
+        },
+        "DatePrecise": {
+            "title": "DatePrecise",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "dateprecise",
+                    "enum": ["dateprecise"],
+                    "type": "string",
+                },
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+                "date": {"title": "Date", "type": "string"},
+                "calendar_format": {
+                    "title": "Calendar Format",
+                    "uniqueItems": True,
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DatePrecise_CalendarFormat_Calendar_RelatedItem"
+                    },
+                },
+            },
+            "required": ["uid", "calendar_format"],
+        },
+        "Person_IsOwnerOf_Pet_RelatedItem": {
+            "title": "Person_IsOwnerOf_Pet_RelatedItem",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "pet",
+                    "enum": ["pet"],
+                    "type": "string",
+                },
+                "label": {"title": "Label", "type": "string"},
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+            },
+            "required": ["label", "uid"],
+        },
+        "Person_IsOwnerOf_Book_RelatedItem": {
+            "title": "Person_IsOwnerOf_Book_RelatedItem",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "book",
+                    "enum": ["book"],
+                    "type": "string",
+                },
+                "label": {"title": "Label", "type": "string"},
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+            },
+            "required": ["label", "uid"],
+        },
+        "Person_IsMemberOf_Organisation_RelatedItem": {
+            "title": "Person_IsMemberOf_Organisation_RelatedItem",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "organisation",
+                    "enum": ["organisation"],
+                    "type": "string",
+                },
+                "label": {"title": "Label", "type": "string"},
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+            },
+            "required": ["label", "uid"],
+        },
+        "Person_IsIdentifiedBy_PersonIdentification_RelatedItem": {
+            "title": "Person_IsIdentifiedBy_PersonIdentification_RelatedItem",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "personidentification",
+                    "enum": ["personidentification"],
+                    "type": "string",
+                },
+                "label": {"title": "Label", "type": "string"},
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+            },
+            "required": ["label", "uid"],
+        },
+        "Person_IsAuthorOf_Book_RelatedItem": {
+            "title": "Person_IsAuthorOf_Book_RelatedItem",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "book",
+                    "enum": ["book"],
+                    "type": "string",
+                },
+                "label": {"title": "Label", "type": "string"},
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+            },
+            "required": ["label", "uid"],
+        },
+        "Person_IsAuthorOf_NonOwnableBook_RelatedItem": {
+            "title": "Person_IsAuthorOf_NonOwnableBook_RelatedItem",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "nonownablebook",
+                    "enum": ["nonownablebook"],
+                    "type": "string",
+                },
+                "label": {"title": "Label", "type": "string"},
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+            },
+            "required": ["label", "uid"],
+        },
+        "Person_IsAuthorOf_DefinitelyNonOwnableBook_RelatedItem": {
+            "title": "Person_IsAuthorOf_DefinitelyNonOwnableBook_RelatedItem",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "definitelynonownablebook",
+                    "enum": ["definitelynonownablebook"],
+                    "type": "string",
+                },
+                "label": {"title": "Label", "type": "string"},
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+            },
+            "required": ["label", "uid"],
+        },
+        "Person_IsInvolvedInHappening_Happening_RelatedItem": {
+            "title": "Person_IsInvolvedInHappening_Happening_RelatedItem",
+            "type": "object",
+            "properties": {
+                "real_type": {
+                    "title": "Real Type",
+                    "default": "happening",
+                    "enum": ["happening"],
+                    "type": "string",
+                },
+                "label": {"title": "Label", "type": "string"},
+                "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
+            },
+            "required": ["label", "uid"],
+        },
+    },
+}
