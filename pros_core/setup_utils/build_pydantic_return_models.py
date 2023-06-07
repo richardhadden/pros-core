@@ -5,6 +5,7 @@ from typing import Any, Literal, Optional, TypeVar, Union
 
 import pydantic.main
 from camel_converter import to_pascal
+from fastapi_camelcase import CamelModel
 from icecream import ic
 from neomodel import (
     BooleanProperty,
@@ -115,6 +116,7 @@ def build_relation_data_model(
 
     pydantic_model = create_model(
         f"{data_model_name}_RelationData",
+        __base__=CamelModel,
         **pydantic_properties,
     )
     return pydantic_model
@@ -145,7 +147,7 @@ def build_relation_return_model(
 
     pydantic_model = create_model(
         class_name,
-        __base__=base,
+        __base__=CamelModel,
         real_type=(Literal[relationship_to_neomodel_class.__name__.lower()], relationship_to_neomodel_class.__name__.lower()),  # type: ignore
         label=(str, ...),
         uid=(UUID4, ...),
@@ -370,6 +372,7 @@ def build_pydantic_model(neomodel_class: type[BaseNode]) -> type[BaseModel]:
 
     pydantic_model = create_model(
         neomodel_class.__name__,
+        __base__=CamelModel,
         real_type=(
             Literal[neomodel_class.__name__.lower()],  # type: ignore
             neomodel_class.__name__.lower(),

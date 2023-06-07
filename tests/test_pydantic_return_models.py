@@ -33,48 +33,48 @@ def test_build_pydantic_model_for_person():
     # assert s == {}
     assert s["title"] == "Person"
     assert s["type"] == "object"
-    assert s["properties"]["real_type"]
-    real_type = s["properties"]["real_type"]
-    assert real_type["title"] == "Real Type"
+    assert s["properties"]["realType"]
+    real_type = s["properties"]["realType"]
+    assert real_type["title"] == "Realtype"
     assert real_type["default"] == "person"
     assert real_type["enum"] == ["person"]
     assert real_type["type"] == "string"
 
     assert "uid" in s["properties"]
     assert s["properties"]["label"] == {"title": "Label", "type": "string"}
-    assert s["properties"]["created_by"] == {"title": "Created By", "type": "string"}
-    assert s["properties"]["created_when"] == {
-        "title": "Created When",
+    assert s["properties"]["createdBy"] == {"title": "Createdby", "type": "string"}
+    assert s["properties"]["createdWhen"] == {
+        "title": "Createdwhen",
         "type": "string",
         "format": "date-time",
     }
-    assert s["properties"]["modified_by"] == {"title": "Modified By", "type": "string"}
-    assert s["properties"]["modified_when"] == {
-        "title": "Modified When",
+    assert s["properties"]["modifiedBy"] == {"title": "Modifiedby", "type": "string"}
+    assert s["properties"]["modifiedWhen"] == {
+        "title": "Modifiedwhen",
         "type": "string",
         "format": "date-time",
     }
-    assert s["properties"]["is_deleted"] == {
-        "title": "Is Deleted",
+    assert s["properties"]["isDeleted"] == {
+        "title": "Isdeleted",
         "default": False,
         "type": "boolean",
     }
 
-    assert s["properties"]["last_dependent_change"] == {
-        "title": "Last Dependent Change",
+    assert s["properties"]["lastDependentChange"] == {
+        "title": "Lastdependentchange",
         "type": "string",
         "format": "date-time",
     }
     assert s["properties"]["name"] == {"title": "Name", "type": "string"}
-    assert s["properties"]["is_male"] == {
-        "title": "Is Male",
+    assert s["properties"]["isMale"] == {
+        "title": "Ismale",
         "default": True,
         "type": "boolean",
     }
 
-    has_books = s["properties"]["has_books"]
+    has_books = s["properties"]["hasBooks"]
     assert has_books
-    assert has_books["title"] == "Has Books"
+    assert has_books["title"] == "Hasbooks"
     assert has_books["uniqueItems"] == True
     assert has_books["type"] == "array"
     has_books_items = has_books["items"]
@@ -91,17 +91,17 @@ def test_build_pydantic_model_for_person():
         "$ref": "#/definitions/Person_HasBooks_DefinitelyNonOwnableBook_RelatedItem"
     } in has_books_items["anyOf"]
 
-    assert s["properties"]["owns_pets"] == {
-        "title": "Owns Pets",
+    assert s["properties"]["ownsPets"] == {
+        "title": "Ownspets",
         "uniqueItems": True,
         "type": "array",
         "items": {"$ref": "#/definitions/Person_OwnsPets_Pet_RelatedItem"},
     }
 
-    owns_things = s["properties"]["owns_things"]
+    owns_things = s["properties"]["ownsThings"]
     assert owns_things
 
-    assert owns_things["title"] == "Owns Things"
+    assert owns_things["title"] == "Ownsthings"
     assert owns_things["maxItems"] == 1
     assert owns_things["uniqueItems"] == True
     assert owns_things["type"] == "array"
@@ -115,9 +115,9 @@ def test_build_pydantic_model_for_person():
         "$ref": "#/definitions/Person_OwnsThings_Book_RelatedItem"
     } in owns_things_items["anyOf"]
 
-    has_root_vegetable = s["properties"]["has_root_vegetable"]
+    has_root_vegetable = s["properties"]["hasRootVegetable"]
     assert has_root_vegetable
-    assert has_root_vegetable["title"] == "Has Root Vegetable"
+    assert has_root_vegetable["title"] == "Hasrootvegetable"
     assert has_root_vegetable["minItems"] == 1
     assert has_root_vegetable["maxItems"] == 1
     assert has_root_vegetable["uniqueItems"] == True
@@ -132,9 +132,9 @@ def test_build_pydantic_model_for_person():
         "$ref": "#/definitions/Person_HasRootVegetable_Turnip_RelatedItem"
     } in has_root_vegetable_items["anyOf"]
 
-    is_owner_of = s["properties"]["is_owner_of"]
+    is_owner_of = s["properties"]["isOwnerOf"]
     assert is_owner_of
-    assert is_owner_of["title"] == "Is Owner Of"
+    assert is_owner_of["title"] == "Isownerof"
     assert is_owner_of["type"] == "array"
     is_owner_of_items = is_owner_of["items"]
     assert len(is_owner_of_items["anyOf"]) == 2
@@ -145,23 +145,23 @@ def test_build_pydantic_model_for_person():
         "$ref": "#/definitions/Person_IsOwnerOf_Book_RelatedItem"
     } in is_owner_of_items["anyOf"]
 
-    assert s["properties"]["is_member_of"] == {
-        "title": "Is Member Of",
+    assert s["properties"]["isMemberOf"] == {
+        "title": "Ismemberof",
         "type": "array",
         "items": {"$ref": "#/definitions/Person_IsMemberOf_Organisation_RelatedItem"},
     }
 
-    assert s["properties"]["is_identified_by"] == {
-        "title": "Is Identified By",
+    assert s["properties"]["isIdentifiedBy"] == {
+        "title": "Isidentifiedby",
         "type": "array",
         "items": {
             "$ref": "#/definitions/Person_IsIdentifiedBy_PersonIdentification_RelatedItem"
         },
     }
 
-    is_author_of = s["properties"]["is_author_of"]
+    is_author_of = s["properties"]["isAuthorOf"]
     assert is_author_of
-    assert is_author_of["title"] == "Is Author Of"
+    assert is_author_of["title"] == "Isauthorof"
     assert is_author_of["type"] == "array"
     is_author_of_items = is_author_of["items"]
     assert is_author_of_items
@@ -170,8 +170,8 @@ def test_build_pydantic_model_for_person():
         "$ref": "#/definitions/Person_IsAuthorOf_Book_RelatedItem"
     } in is_author_of_items["anyOf"]
 
-    assert s["properties"]["is_involved_in_happening"] == {
-        "title": "Is Involved In Happening",
+    assert s["properties"]["isInvolvedInHappening"] == {
+        "title": "Isinvolvedinhappening",
         "type": "array",
         "items": {
             "$ref": "#/definitions/Person_IsInvolvedInHappening_Happening_RelatedItem"
@@ -180,12 +180,12 @@ def test_build_pydantic_model_for_person():
 
     assert s["required"] == [
         "uid",
-        "last_dependent_change",
-        "has_books",
-        "owns_pets",
-        "owns_things",
-        "has_root_vegetable",
-        "date_of_birth",
+        "lastDependentChange",
+        "hasBooks",
+        "ownsPets",
+        "ownsThings",
+        "hasRootVegetable",
+        "dateOfBirth",
     ]
 
     assert s["definitions"] == {
@@ -193,8 +193,8 @@ def test_build_pydantic_model_for_person():
             "title": "Person_HasBooks_Book_RelatedItem",
             "type": "object",
             "properties": {
-                "real_type": {
-                    "title": "Real Type",
+                "realType": {
+                    "title": "Realtype",
                     "default": "book",
                     "enum": ["book"],
                     "type": "string",
@@ -208,8 +208,8 @@ def test_build_pydantic_model_for_person():
             "title": "Person_HasBooks_NonOwnableBook_RelatedItem",
             "type": "object",
             "properties": {
-                "real_type": {
-                    "title": "Real Type",
+                "realType": {
+                    "title": "Realtype",
                     "default": "nonownablebook",
                     "enum": ["nonownablebook"],
                     "type": "string",
@@ -223,8 +223,8 @@ def test_build_pydantic_model_for_person():
             "title": "Person_HasBooks_DefinitelyNonOwnableBook_RelatedItem",
             "type": "object",
             "properties": {
-                "real_type": {
-                    "title": "Real Type",
+                "realType": {
+                    "title": "Realtype",
                     "default": "definitelynonownablebook",
                     "enum": ["definitelynonownablebook"],
                     "type": "string",
@@ -238,33 +238,33 @@ def test_build_pydantic_model_for_person():
             "title": "Person_OwnsPets_Pet_RelatedItem_RelationData",
             "type": "object",
             "properties": {
-                "purchased_when": {"title": "Purchased When", "type": "string"}
+                "purchasedWhen": {"title": "Purchasedwhen", "type": "string"}
             },
         },
         "Person_OwnsPets_Pet_RelatedItem": {
             "title": "Person_OwnsPets_Pet_RelatedItem",
             "type": "object",
             "properties": {
-                "real_type": {
-                    "title": "Real Type",
+                "realType": {
+                    "title": "Realtype",
                     "default": "pet",
                     "enum": ["pet"],
                     "type": "string",
                 },
                 "label": {"title": "Label", "type": "string"},
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
-                "relation_data": {
+                "relationData": {
                     "$ref": "#/definitions/Person_OwnsPets_Pet_RelatedItem_RelationData"
                 },
             },
-            "required": ["label", "uid", "relation_data"],
+            "required": ["label", "uid", "relationData"],
         },
         "Person_OwnsThings_Pet_RelatedItem": {
             "title": "Person_OwnsThings_Pet_RelatedItem",
             "type": "object",
             "properties": {
-                "real_type": {
-                    "title": "Real Type",
+                "realType": {
+                    "title": "Realtype",
                     "default": "pet",
                     "enum": ["pet"],
                     "type": "string",
@@ -278,8 +278,8 @@ def test_build_pydantic_model_for_person():
             "title": "Person_OwnsThings_Book_RelatedItem",
             "type": "object",
             "properties": {
-                "real_type": {
-                    "title": "Real Type",
+                "realType": {
+                    "title": "Realtype",
                     "default": "book",
                     "enum": ["book"],
                     "type": "string",
@@ -293,8 +293,8 @@ def test_build_pydantic_model_for_person():
             "title": "Person_HasRootVegetable_Potato_RelatedItem",
             "type": "object",
             "properties": {
-                "real_type": {
-                    "title": "Real Type",
+                "realType": {
+                    "title": "Realtype",
                     "default": "potato",
                     "enum": ["potato"],
                     "type": "string",
@@ -308,8 +308,8 @@ def test_build_pydantic_model_for_person():
             "title": "Person_HasRootVegetable_Turnip_RelatedItem",
             "type": "object",
             "properties": {
-                "real_type": {
-                    "title": "Real Type",
+                "realType": {
+                    "title": "Realtype",
                     "default": "turnip",
                     "enum": ["turnip"],
                     "type": "string",
@@ -323,8 +323,8 @@ def test_build_pydantic_model_for_person():
             "title": "DateImprecise_CalendarFormat_Calendar_RelatedItem",
             "type": "object",
             "properties": {
-                "real_type": {
-                    "title": "Real Type",
+                "realType": {
+                    "title": "Realtype",
                     "default": "calendar",
                     "enum": ["calendar"],
                     "type": "string",
@@ -338,16 +338,16 @@ def test_build_pydantic_model_for_person():
             "title": "DateImprecise",
             "type": "object",
             "properties": {
-                "real_type": {
-                    "title": "Real Type",
+                "realType": {
+                    "title": "Realtype",
                     "default": "dateimprecise",
                     "enum": ["dateimprecise"],
                     "type": "string",
                 },
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
                 "date": {"title": "Date", "type": "string"},
-                "calendar_format": {
-                    "title": "Calendar Format",
+                "calendarFormat": {
+                    "title": "Calendarformat",
                     "uniqueItems": True,
                     "type": "array",
                     "items": {
@@ -355,14 +355,14 @@ def test_build_pydantic_model_for_person():
                     },
                 },
             },
-            "required": ["uid", "calendar_format"],
+            "required": ["uid", "calendarFormat"],
         },
         "DatePrecise_CalendarFormat_Calendar_RelatedItem": {
             "title": "DatePrecise_CalendarFormat_Calendar_RelatedItem",
             "type": "object",
             "properties": {
-                "real_type": {
-                    "title": "Real Type",
+                "realType": {
+                    "title": "Realtype",
                     "default": "calendar",
                     "enum": ["calendar"],
                     "type": "string",
@@ -376,16 +376,16 @@ def test_build_pydantic_model_for_person():
             "title": "DatePrecise",
             "type": "object",
             "properties": {
-                "real_type": {
-                    "title": "Real Type",
+                "realType": {
+                    "title": "Realtype",
                     "default": "dateprecise",
                     "enum": ["dateprecise"],
                     "type": "string",
                 },
                 "uid": {"title": "Uid", "type": "string", "format": "uuid4"},
                 "date": {"title": "Date", "type": "string"},
-                "calendar_format": {
-                    "title": "Calendar Format",
+                "calendarFormat": {
+                    "title": "Calendarformat",
                     "uniqueItems": True,
                     "type": "array",
                     "items": {
@@ -393,14 +393,14 @@ def test_build_pydantic_model_for_person():
                     },
                 },
             },
-            "required": ["uid", "calendar_format"],
+            "required": ["uid", "calendarFormat"],
         },
         "Person_IsOwnerOf_Pet_RelatedItem": {
             "title": "Person_IsOwnerOf_Pet_RelatedItem",
             "type": "object",
             "properties": {
-                "real_type": {
-                    "title": "Real Type",
+                "realType": {
+                    "title": "Realtype",
                     "default": "pet",
                     "enum": ["pet"],
                     "type": "string",
@@ -414,8 +414,8 @@ def test_build_pydantic_model_for_person():
             "title": "Person_IsOwnerOf_Book_RelatedItem",
             "type": "object",
             "properties": {
-                "real_type": {
-                    "title": "Real Type",
+                "realType": {
+                    "title": "Realtype",
                     "default": "book",
                     "enum": ["book"],
                     "type": "string",
@@ -429,8 +429,8 @@ def test_build_pydantic_model_for_person():
             "title": "Person_IsMemberOf_Organisation_RelatedItem",
             "type": "object",
             "properties": {
-                "real_type": {
-                    "title": "Real Type",
+                "realType": {
+                    "title": "Realtype",
                     "default": "organisation",
                     "enum": ["organisation"],
                     "type": "string",
@@ -444,8 +444,8 @@ def test_build_pydantic_model_for_person():
             "title": "Person_IsIdentifiedBy_PersonIdentification_RelatedItem",
             "type": "object",
             "properties": {
-                "real_type": {
-                    "title": "Real Type",
+                "realType": {
+                    "title": "Realtype",
                     "default": "personidentification",
                     "enum": ["personidentification"],
                     "type": "string",
@@ -459,8 +459,8 @@ def test_build_pydantic_model_for_person():
             "title": "Person_IsAuthorOf_Book_RelatedItem",
             "type": "object",
             "properties": {
-                "real_type": {
-                    "title": "Real Type",
+                "realType": {
+                    "title": "Realtype",
                     "default": "book",
                     "enum": ["book"],
                     "type": "string",
@@ -474,8 +474,8 @@ def test_build_pydantic_model_for_person():
             "title": "Person_IsAuthorOf_NonOwnableBook_RelatedItem",
             "type": "object",
             "properties": {
-                "real_type": {
-                    "title": "Real Type",
+                "realType": {
+                    "title": "Realtype",
                     "default": "nonownablebook",
                     "enum": ["nonownablebook"],
                     "type": "string",
@@ -489,8 +489,8 @@ def test_build_pydantic_model_for_person():
             "title": "Person_IsAuthorOf_DefinitelyNonOwnableBook_RelatedItem",
             "type": "object",
             "properties": {
-                "real_type": {
-                    "title": "Real Type",
+                "realType": {
+                    "title": "Realtype",
                     "default": "definitelynonownablebook",
                     "enum": ["definitelynonownablebook"],
                     "type": "string",
@@ -504,8 +504,8 @@ def test_build_pydantic_model_for_person():
             "title": "Person_IsInvolvedInHappening_Happening_RelatedItem",
             "type": "object",
             "properties": {
-                "real_type": {
-                    "title": "Real Type",
+                "realType": {
+                    "title": "Realtype",
                     "default": "happening",
                     "enum": ["happening"],
                     "type": "string",

@@ -1,11 +1,14 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 
 def build_routes(_app, models, ModelManager):
     router = APIRouter()
     for app_model in ModelManager.models:
 
-        def get() -> list[app_model.pydantic_return_model]:
+        def get(
+            q: str
+            | None = Query(..., description="Filter parameter for autocomplete query")
+        ) -> list[app_model.pydantic_return_model]:
             return [
                 {
                     "uid": "550e8400-e29b-41d4-a716-446655440000",
@@ -27,5 +30,9 @@ def build_routes(_app, models, ModelManager):
                 }
             ]
 
-        router.add_api_route("/" + app_model.model_name.lower(), endpoint=get)
+        router.add_api_route(
+            "/entities/" + app_model.model_name.lower() + "/",
+            endpoint=get,
+            name=f"{app_model.model_name}.list",
+        )
     _app.include_router(router)
