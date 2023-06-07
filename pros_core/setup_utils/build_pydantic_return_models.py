@@ -304,13 +304,16 @@ def build_pydantic_return_reverse_relations(
     neomodel_class: type[BaseNode],
 ) -> type[BaseModel]:
     neomodel_reverse_relation_nodes = build_reverse_relationships(neomodel_class)
-
+    pydantic_properties = {}
     for (
         reverse_relation_name,
         reverse_relation_app_model,
     ) in neomodel_reverse_relation_nodes.items():
-        print(reverse_relation_name, reverse_relation_app_model)
-        assert False
+        base_model = build_relation_return_model(
+            relationship_from_neomodel_class=reverse_relation_app_model.target_model_name,
+            relationship_name=reverse_relation_name,
+            relationship_to_neomodel_class=neomodel_class,
+        )
 
 
 def build_pydantic_model(neomodel_class: type[BaseNode]) -> type[BaseModel]:

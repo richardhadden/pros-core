@@ -23,7 +23,7 @@ from pros_core.models import (
 
 
 @dataclass
-class HashableAppModelItem:
+class AppModelItem:
     model_name: str
     model: type[AbstractNode]
     app_name: str
@@ -33,6 +33,9 @@ class HashableAppModelItem:
 
     def __hash__(self) -> int:
         return hash(self.model_name)
+
+    def repr(self):
+        return f"<HashedAppModelItem model_name='{self.model_name}' model={repr(self.model)} app_name='{self.app_name}'>"
 
 
 @dataclass
@@ -40,7 +43,7 @@ class SubclassHierarchyItem:
     app_name: str
     model_name: str
     model: type[AbstractNode]
-    subclasses: HashableAppModelItem[Self]
+    subclasses: AppModelItem[Self]
 
     def __eq__(self, obj) -> bool:
         return self.model_name == obj
@@ -49,7 +52,7 @@ class SubclassHierarchyItem:
         return hash(self.model_name)
 
 
-class HashedAppModelSet(OrderedSet):
+class AppModelSet(OrderedSet):
     def __getitem__(self, item) -> AppModel:
         return ModelManager(item)
 
@@ -59,6 +62,9 @@ class HashedAppModelSet(OrderedSet):
             return super().__contains__(obj)
         else:
             return super().__contains__(obj.__name__)
+
+    def __repr__(self):
+        return f"<{__class__.__name__} {', '.join(repr(item) for item in self)}>"
 
 
 @dataclass
@@ -122,9 +128,9 @@ class AppModel:
     relationships: dict[str, RelationshipType]
     child_nodes: dict[str, ChildNodeRelationType]
     related_reifications: dict[str, ReificationRelationshipType]
-    subclass_hierarchy: HashableAppModelItem[SubclassHierarchyItem]
-    subclasses: HashedAppModelSet[HashableAppModelItem]
-    parent_classes: HashedAppModelSet[HashableAppModelItem]
+    subclass_hierarchy: AppModelItem[SubclassHierarchyItem]
+    subclasses: AppModelSet[AppModelItem]
+    parent_classes: AppModelSet[AppModelItem]
     reverse_relationships: dict[str, dict]
 
 
@@ -159,7 +165,7 @@ class ModelManagerClass:
                 raise ModelManagerException(f"Model {model_identifier} not found.")
 
         # Get by qualified name
-        elif "." in model_identifier:
+        elif isinstance(model_identifier, str) and "." in model_identifier:
             try:
                 return self.pros_models_by_app_name_model_name[
                     to_pascal(model_identifier).lower()
@@ -168,7 +174,7 @@ class ModelManagerClass:
                 raise ModelManagerException(f"Model <{model_identifier}> not found.")
 
         # Get by unqualified name
-        elif "." not in model_identifier:
+        elif isinstance(model_identifier, str) and "." not in model_identifier:
             try:
                 return self.pros_models_by_model_name[
                     to_pascal(model_identifier).lower()
@@ -212,7 +218,7 @@ def build_related_reifications(
 def build_subclasses_hierarchy(
     model: type[AbstractNode],
 ) -> list[SubclassHierarchyItem]:
-    return HashedAppModelSet(
+    return AppModelSet(
         SubclassHierarchyItem(
             model_name=m.__name__.lower(),
             model=m,
@@ -223,15 +229,15 @@ def build_subclasses_hierarchy(
     )
 
 
-def build_subclasses_set(model: type[AbstractNode]) -> list[HashableAppModelItem]:
-    subclasses = HashedAppModelSet()
+def build_subclasses_set(model: type[AbstractNode]) -> list[AppModelItem]:
+    subclasses = AppModelSet()
 
     if not model.__subclasses__():
         return subclasses
 
     for subclass in model.__subclasses__():
         subclasses.add(
-            HashableAppModelItem(
+            AppModelItem(
                 model_name=subclass.__name__,
                 model=subclass,
                 app_name=".".join(subclass.__module__.split(".")[:-1]),
@@ -243,10 +249,10 @@ def build_subclasses_set(model: type[AbstractNode]) -> list[HashableAppModelItem
 
 def build_parent_classes_set(
     model: type[AbstractNode],
-) -> HashedAppModelSet[HashableAppModelItem]:
-    return HashedAppModelSet(
+) -> AppModelSet[AppModelItem]:
+    return AppModelSet(
         [
-            HashableAppModelItem(
+            AppModelItem(
                 model_name=m.__name__,
                 model=m,
                 app_name=".".join(m.__module__.split(".")[:-1]),

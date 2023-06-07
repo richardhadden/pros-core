@@ -297,13 +297,13 @@ def test_abstract_reification_added_to_app_model():
 
 def test_build_subclasses_hierarchy():
     from pros_core.setup_utils.build_app_model_definitions import (
-        HashedAppModelSet,
+        AppModelSet,
         SubclassHierarchyItem,
         build_subclasses_hierarchy,
     )
-    from test_app.models import Animal, Entity, Person
+    from test_app.models import Animal, Entity, Organisation, Person
 
-    assert build_subclasses_hierarchy(Entity) == HashedAppModelSet(
+    assert build_subclasses_hierarchy(Entity) == AppModelSet(
         [
             SubclassHierarchyItem(
                 model_name="animal",
@@ -317,21 +317,27 @@ def test_build_subclasses_hierarchy():
                         subclasses=[],
                     )
                 ],
-            )
+            ),
+            SubclassHierarchyItem(
+                model_name="organisation",
+                app_name="pros_testing",
+                model=Organisation,
+                subclasses=[],
+            ),
         ]
     )
 
 
 def test_app_model_subclass_hierarchy():
     from pros_core.setup_utils.build_app_model_definitions import (
-        HashedAppModelSet,
+        AppModelSet,
         ModelManager,
         SubclassHierarchyItem,
     )
-    from test_app.models import Animal, Entity, Person
+    from test_app.models import Animal, Entity, Organisation, Person
 
     entity_am = ModelManager.get_model("Entity")
-    assert entity_am.subclass_hierarchy == HashedAppModelSet(
+    assert entity_am.subclass_hierarchy == AppModelSet(
         [
             SubclassHierarchyItem(
                 model_name="animal",
@@ -345,42 +351,50 @@ def test_app_model_subclass_hierarchy():
                         subclasses=[],
                     )
                 ],
-            )
+            ),
+            SubclassHierarchyItem(
+                model_name="organisation",
+                app_name="pros_testing",
+                model=Organisation,
+                subclasses=[],
+            ),
         ]
     )
 
 
 def test_build_subclass_list():
     from pros_core.setup_utils.build_app_model_definitions import (
-        HashableAppModelItem,
-        HashedAppModelSet,
+        AppModelItem,
+        AppModelSet,
         ModelManager,
         build_subclasses_set,
     )
-    from test_app.models import Animal, Entity, Person, Pet
+    from test_app.models import Animal, Entity, Organisation, Person, Pet
 
-    assert build_subclasses_set(Entity) == HashedAppModelSet(
+    assert build_subclasses_set(Entity) == AppModelSet(
         [
-            HashableAppModelItem("Animal", Animal, "pros_testing"),
-            HashableAppModelItem("Pet", Pet, "pros_testing"),
-            HashableAppModelItem("Person", Person, "pros_testing"),
+            AppModelItem("Animal", Animal, "pros_testing"),
+            AppModelItem("Pet", Pet, "pros_testing"),
+            AppModelItem("Person", Person, "pros_testing"),
+            AppModelItem("Organisation", Organisation, "pros_testing"),
         ]
     )
 
 
 def test_app_model_subclass_list():
     from pros_core.setup_utils.build_app_model_definitions import (
-        HashableAppModelItem,
-        HashedAppModelSet,
+        AppModelItem,
+        AppModelSet,
         ModelManager,
     )
-    from test_app.models import Animal, Entity, Person, Pet
+    from test_app.models import Animal, Entity, Organisation, Person, Pet
 
-    assert ModelManager(Entity).subclasses == HashedAppModelSet(
+    assert ModelManager(Entity).subclasses == AppModelSet(
         [
-            HashableAppModelItem("Animal", Animal, "pros_testing"),
-            HashableAppModelItem("Pet", Pet, "pros_testing"),
-            HashableAppModelItem("Person", Person, "pros_testing"),
+            AppModelItem("Animal", Animal, "pros_testing"),
+            AppModelItem("Pet", Pet, "pros_testing"),
+            AppModelItem("Person", Person, "pros_testing"),
+            AppModelItem("Organisation", Organisation, "pros_testing"),
         ]
     )
 
@@ -391,54 +405,46 @@ def test_app_model_subclass_list():
 
 def test_build_parent_class_list():
     from pros_core.setup_utils.build_app_model_definitions import (
-        HashableAppModelItem,
-        HashedAppModelSet,
+        AppModelItem,
+        AppModelSet,
         build_parent_classes_set,
     )
     from test_app.models import Animal, Entity, Person
 
-    assert build_parent_classes_set(Person) == HashedAppModelSet(
+    assert build_parent_classes_set(Person) == AppModelSet(
         [
-            HashableAppModelItem(
-                model=Animal, model_name="Animal", app_name="pros_testing"
-            ),
-            HashableAppModelItem(
-                model=Entity, model_name="Entity", app_name="pros_testing"
-            ),
+            AppModelItem(model=Animal, model_name="Animal", app_name="pros_testing"),
+            AppModelItem(model=Entity, model_name="Entity", app_name="pros_testing"),
         ]
     )
 
 
 def test_app_model_parent_class_list():
     from pros_core.setup_utils.build_app_model_definitions import (
-        HashableAppModelItem,
-        HashedAppModelSet,
+        AppModelItem,
+        AppModelSet,
         ModelManager,
     )
     from test_app.models import Animal, Entity, Person
 
-    assert ModelManager(Person).parent_classes == HashedAppModelSet(
+    assert ModelManager(Person).parent_classes == AppModelSet(
         [
-            HashableAppModelItem(
-                model=Animal, model_name="Animal", app_name="pros_testing"
-            ),
-            HashableAppModelItem(
-                model=Entity, model_name="Entity", app_name="pros_testing"
-            ),
+            AppModelItem(model=Animal, model_name="Animal", app_name="pros_testing"),
+            AppModelItem(model=Entity, model_name="Entity", app_name="pros_testing"),
         ]
     )
 
 
 def test_hashed_app_model_set_and_items():
     from pros_core.setup_utils.build_app_model_definitions import (
-        HashableAppModelItem,
-        HashedAppModelSet,
+        AppModelItem,
+        AppModelSet,
     )
     from test_app.models import Animal, Entity, Person
 
-    animal_item = HashableAppModelItem("Animal", Animal, "pros_testing")
-    person_item = HashableAppModelItem("Person", Person, "pros_testing")
-    subclass_set = HashedAppModelSet([animal_item, person_item])
+    animal_item = AppModelItem("Animal", Animal, "pros_testing")
+    person_item = AppModelItem("Person", Person, "pros_testing")
+    subclass_set = AppModelSet([animal_item, person_item])
 
     assert animal_item == "Animal"
 
@@ -489,6 +495,14 @@ def test_build_reverse_relations():
             reverse_relationship_label="is_author_of",
             forward_relationship_label="AUTHOR",
             relation_manager=OneOrMore,
+            has_relation_data=False,
+            relation_properties=[],
+        ),
+        "is_member_of": ReverseRelationshipType(
+            target_model_name="Organisation",
+            reverse_relationship_label="is_member_of",
+            forward_relationship_label="HAS_MEMBER",
+            relation_manager=ZeroOrMore,
             has_relation_data=False,
             relation_properties=[],
         ),

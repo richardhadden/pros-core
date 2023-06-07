@@ -70,7 +70,7 @@ class PetOwnershipRelation(RelationshipBase):
 
 
 class Organisation(Entity):
-    pass
+    has_member = RelationshipTo("Person", "is_member_of")
 
 
 class Person(Animal):
