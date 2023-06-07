@@ -5,9 +5,50 @@
 A running list of stuff as it occurs to me
 
 - Reverse relation labels need to be unique for a Node class!
+- Pydantic model: subclasses should not be abstract; check before adding as a possible type
 
 
-## Notes:
+## Notes
+
+## Installation
+
+### Brief note on current envisaged installation process
+
+- Install `manage-fastapi` cli
+- Use `fastapi startproject` to create a new project (ManageFastAPI expects this to be called `app`)
+- Install `pros-core`
+- Use `fastapi startapp` to create a new app (same principle as a Django app) - call it e.g. `my_app`
+- In `app/main.py`, import `setup_app` from `pros_core`, and `settings` from `app.core.config`. Add this to in `app/main.py::get_application`, calling `setup_app(_app, settings)`. `app/main.py::get_application` should look like this:
+
+```python
+def get_application():
+    _app = FastAPI(title=settings.PROJECT_NAME)
+    _app = setup_app(_app, settings)
+    _app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    return _app
+```
+
+- In `app/core/config.py`, add a name for the app
+- Add an `INSTALLED_APPS` property, which should be a list of strings of the Pros apps that are installed (basically like Django) — _including_ `pros_core`:
+
+```python
+INSTALLED_APPS: list[str] = [
+        "pros_core",
+        "my_app",
+    ]
+```
+
+- Add some models to `my_app/models.py` (automatially imported from here — maybe some better auto-discovery approach later?)
+- Run `fastapi run`!
+
+
 
 ## `ModelManager`, `app_model`, `model`, `pydantic_return_model`, `pydantic_create_model`, `pydantic_edit_model`
 
