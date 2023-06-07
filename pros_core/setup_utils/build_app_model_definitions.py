@@ -300,7 +300,8 @@ def build_relationships(model: type[AbstractNode]) -> dict[str, RelationshipType
 
 @dataclass
 class ReverseRelationshipType:
-    target_model_name: str
+    relationship_from_model_name: str
+    relationship_from_model: BaseNode
     reverse_relationship_label: str
     forward_relationship_label: str
     relation_manager: type[RelationshipManager]
@@ -338,7 +339,8 @@ def build_reverse_relationships(model) -> dict[str, ReverseRelationshipType]:
         ]
 
         rel = ReverseRelationshipType(
-            target_model_name=relation["relation_to"],
+            relationship_from_model_name=relation["relation_to"],
+            relationship_from_model=relation["relation_to_class"],
             reverse_relationship_label=rel_name,
             forward_relationship_label=relation["relationship_forward_name"],
             relation_manager=relation["relationship_manager"],

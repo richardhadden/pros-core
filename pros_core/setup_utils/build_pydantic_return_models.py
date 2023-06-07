@@ -214,7 +214,7 @@ def build_pydantic_return_relations(
             )
 
             # If base model is not abstract, add its pydantic model to the possible types
-            if not getattr(relation_app_model.target_model, "__abstract__", False):
+            if not relation_app_model.target_model.is_abstract:
                 types.append(pydantic_base_model)
 
             # Get all the subclasses and create a
@@ -251,13 +251,13 @@ def build_pydantic_return_related_reifications(
         reificiation_app_model,
     ) in neomodel_abstract_reifications.items():
         types = []
-        base_model = build_pydantic_model(reificiation_app_model.relation_model)
 
-        if not getattr(reificiation_app_model.relation_model, "__abstract__", False):
+        if not reificiation_app_model.target_model.is_abstract:
+            base_model = build_pydantic_model(reificiation_app_model.target_model)
             types.append(base_model)
 
         for subclass_app_model in build_subclasses_set(
-            reificiation_app_model.relation_model
+            reificiation_app_model.target_model
         ):
             subclass_pydantic_model = build_pydantic_model(subclass_app_model.model)
             types.append(subclass_pydantic_model)
@@ -281,8 +281,8 @@ def build_pydantic_return_child_nodes(
     for relationship_name, relation_app_model in neomodel_child_nodes.items():
         types = []
 
-        base_model = build_pydantic_model(relation_app_model.child_model)
-        if not getattr(relation_app_model.child_model, "__abstract__", False):
+        if not relation_app_model.child_model.is_abstract:
+            base_model = build_pydantic_model(relation_app_model.child_model)
             types.append(base_model)
 
         for subclass_app_model in build_subclasses_set(relation_app_model.child_model):
@@ -304,16 +304,54 @@ def build_pydantic_return_reverse_relations(
     neomodel_class: type[BaseNode],
 ) -> type[BaseModel]:
     neomodel_reverse_relation_nodes = build_reverse_relationships(neomodel_class)
-    pydantic_properties = {}
+    pydantic_relations = {}
     for (
         reverse_relation_name,
         reverse_relation_app_model,
     ) in neomodel_reverse_relation_nodes.items():
-        base_model = build_relation_return_model(
-            relationship_from_neomodel_class=reverse_relation_app_model.target_model_name,
-            relationship_name=reverse_relation_name,
-            relationship_to_neomodel_class=neomodel_class,
-        )
+        types = []
+        if reverse_relation_app_model.relationship_from_model.__is_trait__:
+            pydantic_models_with_trait = [
+                build_relation_return_model(
+                    relationship_from_neomodel_class=cls,
+                    relationship_name=reverse_relation_app_model.forward_relationship_label,
+                    relationship_to_neomodel_class=neomodel_class,
+                )
+                for cls in reverse_relation_app_model.relationship_from_model.__classes_with_trait__
+            ]
+
+            pydantic_relations[reverse_relation_name] = (
+                Optional[list[Union[*tuple(pydantic_models_with_trait)]]],  # type: ignore
+                None,
+            )
+
+        else:
+            if not reverse_relation_app_model.relationship_from_model.is_abstract:
+                base_model = build_relation_return_model(
+                    relationship_from_neomodel_class=reverse_relation_app_model.relationship_from_model,
+                    relationship_name=reverse_relation_app_model.forward_relationship_label,
+                    relationship_to_neomodel_class=neomodel_class,
+                )
+                types.append(base_model)
+
+            for subclass_app_model in build_subclasses_set(
+                reverse_relation_app_model.relationship_from_model
+            ):
+                subclass_pydantic_model = build_relation_return_model(
+                    relationship_from_neomodel_class=subclass_app_model.model,
+                    relationship_name=reverse_relation_app_model.forward_relationship_label,
+                    relationship_to_neomodel_class=neomodel_class,
+                )
+                types.append(subclass_pydantic_model)
+
+            t_tuple = tuple(types)
+            t = list[Union[*t_tuple]]  # type: ignore
+            pydantic_relations[reverse_relation_name] = (
+                Optional[t],
+                None,
+            )
+
+    return pydantic_relations
 
 
 def build_pydantic_model(neomodel_class: type[BaseNode]) -> type[BaseModel]:
@@ -324,6 +362,7 @@ def build_pydantic_model(neomodel_class: type[BaseNode]) -> type[BaseModel]:
     pydantic_properties = build_pydantic_properties(neomodel_class)
     pydantic_relations = build_pydantic_return_relations(neomodel_class)
     pydantic_child_nodes = build_pydantic_return_child_nodes(neomodel_class)
+    pydantic_reverse_relations = build_pydantic_return_reverse_relations(neomodel_class)
 
     pydantic_model = create_model(
         neomodel_class.__name__,
@@ -334,6 +373,7 @@ def build_pydantic_model(neomodel_class: type[BaseNode]) -> type[BaseModel]:
         **pydantic_properties,
         **pydantic_relations,
         **pydantic_child_nodes,
+        **pydantic_reverse_relations,
     )
     return pydantic_model
 

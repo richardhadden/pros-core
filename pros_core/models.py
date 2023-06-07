@@ -35,6 +35,11 @@ class OverriddenStructuredNode(StructuredNode):
     __abstract_node__ = True
     __is_trait__ = False
 
+    @classmethod
+    @property
+    def is_abstract(cls):
+        return getattr(cls, "__abstract__", False)
+
     @staticmethod
     def is_abstract_trait(cls) -> bool:
         return getattr(cls, "__is_trait__", False)
@@ -137,7 +142,10 @@ class OverriddenStructuredNode(StructuredNode):
                     rr = REVERSE_RELATIONS[v._raw_class][
                         v.definition["model"].__dict__["reverse_name"].default.lower()
                     ]
+                    print(cls, k, v._raw_class)
+                    # assert False
                     rr["relation"] = v
+                    rr["relation_to_class"] = cls
                     rr["relation_to"] = cls.__name__
                     rr["relationship_forward_name"] = v.definition["relation_type"]
                     rr["relationship_manager"] = v.manager

@@ -463,11 +463,20 @@ def test_build_reverse_relations():
         ReverseRelationshipType,
         build_reverse_relationships,
     )
-    from test_app.models import Person, Pet
+    from test_app.models import (
+        Book,
+        Happening,
+        Organisation,
+        Ownable,
+        Person,
+        PersonIdentification,
+        Pet,
+    )
 
     assert build_reverse_relationships(Person) == {
         "is_owner_of": ReverseRelationshipType(
-            target_model_name="Ownable",
+            relationship_from_model_name="Ownable",
+            relationship_from_model=Ownable,
             reverse_relationship_label="is_owner_of",
             forward_relationship_label="OWNER",
             relation_manager=ZeroOrMore,
@@ -475,7 +484,8 @@ def test_build_reverse_relations():
             relation_properties=[],
         ),
         "is_identified_by": ReverseRelationshipType(
-            target_model_name="PersonIdentification",
+            relationship_from_model_name="PersonIdentification",
+            relationship_from_model=PersonIdentification,
             reverse_relationship_label="is_identified_by",
             forward_relationship_label="PERSONS_IDENTIFIED",
             relation_manager=ZeroOrMore,
@@ -483,7 +493,8 @@ def test_build_reverse_relations():
             relation_properties=[],
         ),
         "is_involved_in_happening": ReverseRelationshipType(
-            target_model_name="Happening",
+            relationship_from_model_name="Happening",
+            relationship_from_model=Happening,
             reverse_relationship_label="is_involved_in_happening",
             forward_relationship_label="INVOLVES_ENTITY",
             relation_manager=ZeroOrMore,
@@ -491,7 +502,8 @@ def test_build_reverse_relations():
             relation_properties=[],
         ),
         "is_author_of": ReverseRelationshipType(
-            target_model_name="Book",
+            relationship_from_model_name="Book",
+            relationship_from_model=Book,
             reverse_relationship_label="is_author_of",
             forward_relationship_label="AUTHOR",
             relation_manager=OneOrMore,
@@ -499,7 +511,8 @@ def test_build_reverse_relations():
             relation_properties=[],
         ),
         "is_member_of": ReverseRelationshipType(
-            target_model_name="Organisation",
+            relationship_from_model_name="Organisation",
+            relationship_from_model=Organisation,
             reverse_relationship_label="is_member_of",
             forward_relationship_label="HAS_MEMBER",
             relation_manager=ZeroOrMore,
@@ -510,7 +523,8 @@ def test_build_reverse_relations():
 
     assert build_reverse_relationships(Pet) == {
         "owned_by_person": ReverseRelationshipType(
-            target_model_name="Person",
+            relationship_from_model_name="Person",
+            relationship_from_model=Person,
             reverse_relationship_label="owned_by_person",
             forward_relationship_label="OWNS_PETS",
             relation_manager=ZeroOrMore,
@@ -518,7 +532,8 @@ def test_build_reverse_relations():
             relation_properties=["purchased_when"],
         ),
         "is_involved_in_happening": ReverseRelationshipType(
-            target_model_name="Happening",
+            relationship_from_model_name="Happening",
+            relationship_from_model=Happening,
             reverse_relationship_label="is_involved_in_happening",
             forward_relationship_label="INVOLVES_ENTITY",
             relation_manager=ZeroOrMore,

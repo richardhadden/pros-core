@@ -9,6 +9,28 @@ A running list of stuff as it occurs to me
 
 ## Notes:
 
+## `ModelManager`, `app_model`, `model`, `pydantic_return_model`, `pydantic_create_model`, `pydantic_edit_model`
+
+Pros models are defined using (customised) `neomodel`-based classes, properties and relation types. `models.py` for a Pros application is the single source of truth.
+
+On starting the application, Pros introspects these models to produce an `app_model` container class, itself held within `ModelManager` (a singleton instance of `ModelManagerClass`), which allows easy lookup of any class. The purpose of `ModelManager` is to enable rapid loooking up of classes without having to introspect `models.py` all the time.
+
+It also stores:
+- the app name (`app_model.app_name`)
+- the model name (`app_model.model_name`)
+- the meta class of a neomodel class as a dict (`app_model.meta`)
+- a dict of the properties of a neomodel class (`app_model.properties`)
+- a dict of outgoing relations (`app_model.relations`)
+- a dict of child nodes (`app_model.child_nodes`)
+- a nested structure of a class's subclass hierarchy (`app_model.subclass_hierarchy`)
+- a set of a class's subclasses (`app_model.subclasses`)
+- a set of a class's parent classes (`app_model.parent_classes`)
+- a dict of reverse relations: relations pointing _to_ a class (`app_model.reverse_relationships`)
+
+Reference to the neomodel class from an `app_model` instance is stored as `app_model.model_class`.
+
+It will also hold the pydantic classes for reading, creating and editing ...
+
 ### Abstract nodes
 
 There are two types of "abstract" nodes:
