@@ -21,9 +21,13 @@ A running list of stuff as it occurs to me
 - In `app/main.py`, import `setup_app` from `pros_core`, and `settings` from `app.core.config`. Add this to in `app/main.py::get_application`, calling `setup_app(_app, settings)`. `app/main.py::get_application` should look like this:
 
 ```python
+...
+from pros_core.setup_app import setup_app
+
+
 def get_application():
     _app = FastAPI(title=settings.PROJECT_NAME)
-    _app = setup_app(_app, settings)
+    _app = setup_app(_app, settings) # <- Call `setup_app` on _app, passing in settings
     _app.add_middleware(
         CORSMiddleware,
         allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
@@ -33,6 +37,8 @@ def get_application():
     )
 
     return _app
+
+...
 ```
 
 - In `app/core/config.py`, add a name for the app
