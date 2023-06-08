@@ -42,8 +42,5 @@ def build_routes(_app, models, ModelManager):
         )
 
         # TODO: remove this at some stage when there's real data, and we can protect actual routes
-        @_app.get("/protected/")
-        def protected(user=LoggedInUser) -> str:
-            return "Got a protected thing"
 
     _app.include_router(router)
