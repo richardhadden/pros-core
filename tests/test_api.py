@@ -5,6 +5,7 @@ from pros_core.auth import LoggedInUser
 from pros_core.setup_app import setup_app
 from testing_app.app.core.config import settings
 from tests.testing_app.app.main import app
+from tests.utils import LoggedInClient
 
 setup_app(app, settings)
 
@@ -13,65 +14,6 @@ setup_app(app, settings)
 @app.get("/protected/")
 def protected(user=LoggedInUser) -> str:
     return "Got a protected thing"
-
-
-class LoggedInClient(TestClient):
-    """Subclass of TestClient to automatically include the access token
-    into the header of any request"""
-
-    def __init__(self, app, access_token: str, *args, **kwargs):
-        super().__init__(app, *args, **kwargs)
-        self._access_token = access_token
-
-    def get(self, *args, **kwargs) -> HttpxResponse:
-        return super().get(
-            *args,
-            **kwargs,
-            headers={
-                "Authorization": f"Bearer {self._access_token}",
-                **kwargs.get("headers", {}),
-            },
-        )
-
-    def post(self, *args, **kwargs) -> HttpxResponse:
-        return super().post(
-            *args,
-            **kwargs,
-            headers={
-                "Authorization": f"Bearer {self._access_token}",
-                **kwargs.get("headers", {}),
-            },
-        )
-
-    def put(self, *args, **kwargs) -> HttpxResponse:
-        return super().put(
-            *args,
-            **kwargs,
-            headers={
-                "Authorization": f"Bearer {self._access_token}",
-                **kwargs.get("headers", {}),
-            },
-        )
-
-    def patch(self, *args, **kwargs) -> HttpxResponse:
-        return super().patch(
-            *args,
-            **kwargs,
-            headers={
-                "Authorization": f"Bearer {self._access_token}",
-                **kwargs.get("headers", {}),
-            },
-        )
-
-    def delete(self, *args, **kwargs) -> HttpxResponse:
-        return super().delete(
-            *args,
-            **kwargs,
-            headers={
-                "Authorization": f"Bearer {self._access_token}",
-                **kwargs.get("headers", {}),
-            },
-        )
 
 
 @pytest.fixture
