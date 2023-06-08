@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, Query
 
 
@@ -5,9 +7,10 @@ def build_routes(_app, models, ModelManager):
     router = APIRouter()
     for app_model in ModelManager.models:
 
-        def get(
-            q: str
-            | None = Query(..., description="Filter parameter for autocomplete query")
+        async def get(
+            q: Optional[str] = Query(
+                None, description="Filter parameter for autocomplete query"
+            )
         ) -> list[app_model.pydantic_return_model]:
             return [
                 {
@@ -22,7 +25,7 @@ def build_routes(_app, models, ModelManager):
                     "last_dependent_change": "2023-06-07T10:18:45.871Z",
                     "is_involved_in_happening": [
                         {
-                            "real_type": "animal",
+                            "real_type": "happening",
                             "label": "string",
                             "uid": "550e8400-e29b-41d4-a716-446655440001",
                         }
