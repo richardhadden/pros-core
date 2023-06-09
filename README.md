@@ -10,6 +10,7 @@ A running list of stuff as it occurs to me
 
 ## Ideas:
 
+- Add a modified ("borrowed") version of `manage-fastapi` to ProsCore as a built-in CLI, to do all kinds of stuff (install db labels, add other commands from e.g. `pros-interface`)
 - Add `InterfaceConfig` class to App config, child of Pydantic `BaseSettings` — use to configure interface (get all the subclasses of `InterfaceConfig` and have some fun) 
 
 ## Notes
