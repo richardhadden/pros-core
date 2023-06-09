@@ -139,10 +139,6 @@ def build_auth(app):
         )
         return {"access_token": access_token, "token_type": "bearer"}
 
-    @app.get("/currentUser/")
-    def get_current_user(user: User = LoggedInUser) -> User:
-        return user
-
 
 if __name__ == "__main__":
     print(get_password_hash("test1234"))

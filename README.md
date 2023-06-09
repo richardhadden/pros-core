@@ -6,7 +6,11 @@ A running list of stuff as it occurs to me
 
 - Reverse relation labels need to be unique for a Node class!
 - Pydantic model: subclasses should not be abstract; check before adding as a possible type
+- Reverse-creatable node with bind field as arg...!
 
+## Ideas:
+
+- Add `InterfaceConfig` class to App config, child of Pydantic `BaseSettings` — use to configure interface (get all the subclasses of `InterfaceConfig` and have some fun) 
 
 ## Notes
 
